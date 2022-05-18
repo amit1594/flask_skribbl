@@ -1,0 +1,181 @@
+body {
+    margin: 0px;
+    padding: 0px;
+    /*height: 100vh;*/
+    /*overflow: hidden;*/
+    background: #313131;
+    font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+    font-size: 14px;
+    line-height: 1.42857143;
+    color: #3b4239;
+}
+
+.screenGame {
+    width: 80vw;
+    display: flex;
+    flex-direction: column;
+    margin: auto;
+    margin-top: 20px;
+}
+
+.gameHeader {
+    height: 5vh;
+    margin-bottom: 8px;
+    background-color: #FAFAD2;
+    border-radius: 2px;
+    display: flex;
+    line-height: 54px;
+    color: black;
+}
+
+.containerGame {
+    display: flex;
+    justify-content: center;
+    height: 65vh;
+}
+
+    .containerGame .containerPlayerList {
+        width: 15vw;
+        height: 65vh;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        margin-right: 8px;
+        color: white;
+        background-color: #4682B4;
+    }
+
+    .containerGame .containerBoard {
+        width: 60vw;
+        height: 65vh;
+        flex: 1 1 auto;
+        min-width: 300px;
+        position: relative;
+        margin: 0;
+    }
+
+    .containerGame .containerChat {
+        width: 15vw;
+        height: 65vh;
+        position: relative;
+        margin-left: 8px;
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background-color: #C0C0C0;
+    }
+
+        .containerGame .containerChat .messagesBox {
+            height: 62vh;
+            overflow-y: auto;
+            background-color: inherit;
+        }
+
+        .containerGame .containerChat .chatInputBox {
+            height: 3vh;
+            background-color: inherit;
+        }
+
+            .containerGame .containerChat .chatInputBox .guessInput {
+                width: 15vw;
+                height: 3vh;
+                background-color: white;
+                padding: 0;
+                border: 2px black;
+            }
+
+canvas {
+    cursor: pointer;
+    position: static;
+}
+
+.page_tbl {
+    table-layout: auto;
+}
+
+.containerToolbar {
+    display: flex;
+    justify-content: center;
+    flex-direction: row;
+    margin-top: 10px;
+}
+
+    .containerToolbar .color-field {
+        height: 40px;
+        width: 40px;
+        min-height: 40px;
+        max-height: 40px;
+        cursor: pointer;
+        display: inline-block;
+        box-sizing: border-box;
+        border-radius: 50%;
+        border: 2px solid white;
+        align-self: center;
+        margin: 0 10px;
+    }
+    .containerToolbar .colorsContainer {
+        width: 500px;
+        height: 100px;
+    }
+
+    .containerToolbar .buttonsContainer {
+        width: 250px;
+        height: 100px;
+    }
+
+        .containerToolbar .buttonsContainer .button {
+            align-self: center;
+            width: 100px;
+            height: 40px;
+            border: 2px solid white;
+            cursor: pointer;
+            color: white;
+            background: #222;
+            font-weight: bold;
+            margin: 5px 5px 5px 5px;
+        }
+
+.pen-range {
+    align-self: center;
+    margin: 0 10px;
+}
+
+.pen_range_text {
+    color: white;
+    text-align: center;
+    padding: 0px;
+    margin: 0px;
+    font-size: 15px;
+}
+
+canvas {
+    background: #fff;
+    width: 100%;
+    /*height: 100%;*/
+}
+
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 5px;
+}
+
+.flex-container > div {
+  flex: 1 1 auto;
+  text-align: center;
+}
+
+.timer {
+    width: 20%;
+}
+
+.roundsCounter {
+    width: 40%;
+}
+
+.wordSpace {
+    width: 40%;
+}

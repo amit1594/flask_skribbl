@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lobby Creation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/lobby.css')}}">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+<body>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+<!-- Content -->
+<section class="hero is-success is-fullheight">
+    <!-- NavBar -->
+    <div class="hero-head">
+        <header class="navbar">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a >
+                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                    </a>
+                    <span class="navbar-burger" data-target="navbarMenuHeroC">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+                </div>
+                <div id="navbarMenuHeroC" class="navbar-menu">
+                    <div class="navbar-end">
+                        <a class="navbar-item is-active">
+                            Home
+                        </a>
+                        <a class="navbar-item">
+                            Examples
+                        </a>
+                        <a class="navbar-item">
+                            Documentation
+                        </a>
+                        <span class="navbar-item">
+                <a class="button is-success is-inverted">
+                  <span class="icon">
+                    <i class="fab fa-github"></i>
+                  </span>
+                  <span>Download</span>
+                </a>
+              </span>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+    <!-- Settings Screen -->
+    <div class="hero-body" id="LobbyScreen">
+        <div class="container has-text-centered">
+            <div class="columns">
+                <!-- Settings -->
+                <div class="column is-5" style="background-color: DodgerBlue">
+                    <h1 class="title">Settings</h1>
+                    <form>
+                        <!-- Game mode -->
+                        <label class="label" for="Gamemode">Gamemode</label>
+                        <div class="control has-icons-left">
+                            <div class="select" style="width: 100%">
+                                <select id="Gamemode" name="Gamemode" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <option value="Classic" selected>Classic</option>
+                                    <option value="Points_Rush">Points Rush</option>
+                                </select>
+                            </div>
+                            <div class="icon is-medium is-left">
+                                <i class="fas fa-dice"></i>
+                            </div>
+                        </div>
+                        <!-- Points limit (for Points Rush) -->
+                        <div id="pLimitDiv">
+                            <label class="label" for="pointsLimit">Points Limit</label>
+                            <div class="control has-icons-left">
+                                <div class="select" style="width: 100%">
+                                    <select id="pointsLimit" name="pointsLimit" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                        <option value="5000">5000</option>
+                                        <option value="10000">10000</option>
+                                        <option value="15000">15000</option>
+                                        <option value="20000">20000</option>
+                                        <option value="25000" selected>25000</option>
+                                        <option value="30000">30000</option>
+                                        <option value="35000">35000</option>
+                                        <option value="40000">40000</option>
+                                        <option value="45000">45000</option>
+                                        <option value="50000">50000</option>
+                                    </select>
+                                </div>
+                                <div class="icon is-medium is-left">
+                                    <i class="fas fa-dice"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Rounds -->
+                        <div id="roundsDiv">
+                            <label class="label" for="Rounds">Rounds</label>
+                            <div class="control has-icons-left">
+                                <div class="select" style="width: 100%">
+                                    <select id="Rounds" name="Rounds" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                        <option value="1">1</option>
+                                        <option value="2">2</option>
+                                        <option value="3">3</option>
+                                        <option value="4">4</option>
+                                        <option value="5">5</option>
+                                        <option value="6" selected>6</option>
+                                        <option value="7">7</option>
+                                        <option value="8">8</option>
+                                        <option value="9">9</option>
+                                        <option value="10">10</option>
+                                        <option value="11">11</option>
+                                        <option value="12">12</option>
+                                    </select>
+                                </div>
+                                <div class="icon is-medium is-left">
+                                    <i class="fas fa-trophy"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Difficulty -->
+                        <label class="label" for="Difficulty">Difficulty</label>
+                        <div class="control has-icons-left">
+                            <div class="select" style="width: 100%">
+                                <select id="Difficulty" name="Difficulty" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <option value="Normal" selected>Normal</option>
+                                    <option value="Difficult">Difficult</option>
+                                </select>
+                            </div>
+                            <div class="icon is-medium is-left">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <p class="help has-text-left">
+                                Difficult mode's hints show just letters, without their correct place in the word.
+                            </p>
+                        </div>
+                        <!-- Draw time -->
+                        <label class="label" for="DrawTime">Draw time (seconds)</label>
+                        <div class="control has-icons-left">
+                            <div class="select" style="width: 100%">
+                                <select id="DrawTime" name="DrawTime" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <option value="30">30</option>
+                                    <option value="40">40</option>
+                                    <option value="50">50</option>
+                                    <option value="60">60</option>
+                                    <option value="70">70</option>
+                                    <option value="80">80</option>
+                                    <option value="90">90</option>
+                                    <option value="100">100</option>
+                                    <option value="110">110</option>
+                                    <option value="120" selected>120</option>
+                                    <option value="130">130</option>
+                                    <option value="140">140</option>
+                                    <option value="150">150</option>
+                                </select>
+                            </div>
+                            <div class="icon is-medium is-left">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <!-- Languages -->
+                        <label class="label" for="Languages">Language</label>
+                        <div class="control has-icons-left">
+                            <div class="select" style="width: 100%">
+                                <select id="Languages" name="Languages" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <option value="English" selected>English</option>
+                                    <option value="Hebrew">Hebrew</option>
+                                    <option value="Italian">Italian</option>
+                                    <option value="Dutch">Dutch</option>
+                                    <option value="French">French</option>
+                                    <option value="German">German</option>
+                                </select>
+                            </div>
+                            <div class="icon is-medium is-left">
+                                <i class="fas fa-language"></i>
+                            </div>
+                        </div>
+                        <!-- Custom Words -->
+                        <div class="field">
+                            <label for="customWords" class="label">Custom Words</label>
+                            <div class="control has-icons-left has-icons-right">
+                                <input class="input" type="text" id="customWords" name="customWords" maxlength="50"
+                                       placeholder="Enter custom words seperated by ','."
+                                       oninput="requestUpdateSettings()" disabled>
+                                <span class="icon is-medium is-left">
+                                    <i class="fas fa-keyboard"></i>
+                                </span>
+                            </div>
+                            <p class="help has-text-left">
+                                Will not add a word if it:
+                                <br>
+                                *  has a non-letter character, including spaces.
+                                <br>
+                                *  is considered inappropriate.
+                            </p>
+                        </div>
+                        <br>
+                        <!-- Submit Button -->
+                        <div class="control">
+                            <button type="button" id="startButton" class="button is-primary" onclick="startGame()" disabled>Submit</button>
+                        </div>
+                    </form>
+                </div>
+                <!-- Player list -->
+                <div class="column is-7" style="background-color: orange">
+                    <h1 class="title">Players</h1>
+                    <div id="lobby_player_list" class="flex-container">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+    <!-- Game Screen -->
+    <div class="screenGame" id="GameScreen">
+        <div id="gameHeader" class="gameHeader">
+            <div class="timer" id="timer">
+                <span class="icon-text">
+                  <span class="icon is-large">
+                    <i class="fas fa-clock"></i>
+                  </span>
+                  <span id="timeLeft"></span>
+                </span>
+            </div>
+            <div class="roundsCounter" id="roundsCounter">
+            </div>
+            <div class="wordSpace" id="wordSpace">
+
+            </div>
+        </div>
+        <br />
+        <div class="containerGame">
+            <div class="containerPlayerList">
+                <div class="content">
+                    <table>
+                        <tbody id="scoreboardTblBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="containerBoard" class="containerBoard">
+                <!-- <canvas id="canvas" width="800" height="600"></canvas> -->
+                <div id="gameCanvas" style="position: absolute;">
+                    <canvas id="canvas"></canvas>
+                    <canvas id="canvas_sample"></canvas>
+                    <canvas id="draw_sample"></canvas>
+                </div>
+                <div id="boardOverlay" style="width: 100%; height: 100%; position: absolute;">
+                    <div class="content has-text-centered">
+                        <p class="title is-2 is-spaced" id="overlay_title">overlay title</p>
+                        <br>
+                        <div class="columns is-centered">
+                          <div class="column is-half">
+                              <ol class="is-size-4" id="overlayList"></ol>
+                          </div>
+                        </div>
+                        <br>
+                        <div id="WordChoicesButtonDiv">
+                            <button id="choice1" value="" onclick="emitWordChoice(this.value)"></button>
+                            <button id="choice2" value="" onclick="emitWordChoice(this.value)"></button>
+                            <button id="choice3" value="" onclick="emitWordChoice(this.value)"></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="containerChat">
+                <div class="messagesBox">
+                    <div class="messages" id="messages">
+                        Chat
+                    </div>
+                </div>
+                <div class="chatInputBox" style="width: 100%">
+                    <div class="container">
+                        <form id="chatForm">
+                            <div class="control">
+                                <input id="inputChat" autocomplete="off" type="text" placeholder="Type your guess here..." maxlength="100">
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <br />
+        <div id="containerToolbar" class="containerToolbar">
+            <div id="buttonsContainer" class="buttonsContainer">
+                <button onclick="undo_last()" type="button" class="button">Undo</button>
+                <button onclick="clear_canvas()" type="button" class="button">Clear</button>
+                <button onclick="red_border(this); action = 'pen'" id="pen_button" type="button" class="button">Pen</button>
+                <button onclick="red_border(this); action = 'fill'" id="fill_button" type="button" class="button">Fill</button>
+            </div>
+
+            <div id="colorsContainer" class="colorsContainer">
+                <div onclick="change_color(this)" id="black-field" class="color-field" style="background: black"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: DimGray"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: purple"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: red"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: blue"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: green"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: orange"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: white"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: DarkGray"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: pink"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: salmon"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: cyan"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: PaleGreen"></div>
+                <div onclick="change_color(this)" class="color-field" style="background: yellow"></div>
+            </div>
+            <div id="pen_range_container">
+                <p class="pen_range_text">Set pen's tip size:</p>
+                <input oninput="draw_width = this.value; document.getElementById('pen_range_text').innerText = value;" type="range" min="1" max="10" class="pen-range" value="2" />
+                <p class="pen_range_text" id="pen_range_text">2</p>
+            </div>
+        </div>
+        <div id="hintButtonContainer" class="containerToolbar">
+            <button type="button" value="private" id="privateHint" onclick="requestHint(this.value)">Private hint 350p</button>
+            <button type="button" value="public" id="publicHint" onclick="requestHint(this.value)">Public hint 150p</button>
+        </div>
+    </div>
+    <!-- my js -->
+    <script src="{{url_for('static', filename='js/lobby.js')}}"></script>
+</section>
+
+</body>
+</html>

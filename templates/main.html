@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Flask_Chat_App</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+</head>
+<body>
+<h1> Hello {{ session.username }}</h1>
+
+<!-- Creating a room -->
+<button class="js-modal-trigger" data-target="room_creation_modal">
+  Create a room
+</button>
+<div id="room_creation_modal" class="modal">
+  <div class="modal-background"></div>
+  <div class="modal-content">
+    <div class="box">
+      <form action="{{ url_for('main_page') }}" onsubmit="return validateForm()" method="POST">
+        <input type="hidden" value="create" name="op">
+        <div class="field">
+          <label>Room ID</label>
+          <div class="control">
+            <input type="text" id='room_id' name='room_id' placeholder="Enter room id" minlength="1"/>
+          </div>
+          <p style="display: none" id="room_id_help1" class="help is-danger">Enter a room ID</p>
+          <p style="display: none" id="room_id_help2" class="help is-danger">Room ID already exists</p>
+        </div>
+        <div class="field">
+          <label>Room Password</label>
+          <div class="control">
+            <input type="text" id='room_password' name='room_password' placeholder="Leave blank for public "/>
+          </div>
+        </div>
+        <input type="submit"/>
+      </form>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+<br><br><br><br>
+<h4> Active rooms:</h4>
+<form action="{{ url_for('main_page') }}" method="POST">
+  <input type="hidden" value="join" name="op">
+  <input type="hidden" value="" id="room_id_1" name="room_id"/>
+  <table id="rooms_table" class="table is-bordered is-striped is-narrow is-hoverable">
+    <thead>
+    <tr>
+      <td>
+        Room ID
+      </td>
+      <td>
+        Players
+      </td>
+      <td>
+        Started?
+      </td>
+      <td>
+        Private/Public
+      </td>
+    </tr>
+    </thead>
+    <tbody>
+    {% set count = 1 %}
+    {% for room, playerCount, started, requiresPassword in rooms %}
+    <tr>
+      <td>
+        {% if playerCount >= 10 %}
+          <p>{{ room }}</p>
+        {% else %}
+          {% if requiresPassword %}
+          <!-- requires_password -->
+          <div>
+            <button type="button" class="js-modal-trigger" data-target="password_modal_{{room}}">
+              {{ room }}
+            </button>
+            <div id="password_modal_{{room}}" class="modal">
+              <div class="modal-background"></div>
+              <div class="modal-content">
+                <div class="box">
+                  <div class="field">
+                    <label>Room Password</label>
+                    <div class="control">
+                      <input type="text" id='req_room_password_{{room}}' name='room_password' placeholder="Enter Password"/>
+                    </div>
+                    <p style="display: none" id="password_help_{{room}}" class="help is-danger">Incorrect Password</p>
+                  </div>
+                  <input type="submit" onclick="updateRoomID('{{ room }}')"/>
+                </div>
+              </div>
+              <button type="button" class="modal-close is-large" aria-label="close"></button>
+            </div>
+          </div>
+          {% else %}
+          <div>
+            <input type="submit" value="{{ room }}" onclick="updateRoomID('{{ room }}')"/>
+          </div>
+          {% endif %}
+        {% endif %}
+      </td>
+      <td>
+        {% if playerCount >= 10 %}
+          <p>Full</p>
+        {% else %}
+          {{ playerCount }}
+        {% endif %}
+      </td>
+      <td>{{ started }}</td>
+      <td>
+      {% if requiresPassword %}
+        Private
+      {% else %}
+        Public
+      {% endif %}
+      </td>
+    </tr>
+    {% set count = count + 1 %}
+    {% endfor %}
+    </tbody>
+  </table>
+</form>
+{% if alert == "create" %}
+  {% if prev_id is not none %}
+    {% if prev_pass is not none %}
+      <script>
+        var prev_id = "{{prev_id}}";
+        var prev_pass = "{{prev_pass}}";
+        if (prev_id.length > 0 || prev_pass.length > 0) {
+          document.getElementById("room_id_help2").style.display = "block";
+          document.getElementById("room_creation_modal").classList.add('is-active');
+          document.getElementById("room_id").value = prev_id;
+          document.getElementById("room_password").value = prev_pass;
+        }
+      </script>
+    {% endif %}
+  {% endif %}
+{% elif alert == "join" %}
+  {% if prev_id is not none %}
+    {% if prev_pass is not none %}
+      <script>
+        var prev_id = "{{prev_id}}";
+        var prev_pass = "{{prev_pass}}";
+        if (prev_id.length > 0 || prev_pass.length > 0) {
+          document.getElementById("password_help_{{prev_id}}").style.display = "block";
+          document.getElementById("password_modal_{{prev_id}}").classList.add('is-active');
+          document.getElementById("req_room_password_{{prev_id}}").value = prev_pass;
+        }
+      </script>
+    {% endif %}
+  {% endif %}
+{% endif %}
+<script src="{{url_for('static', filename='js/main.js')}}"></script>
+</body>
+</html>

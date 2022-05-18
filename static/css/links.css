@@ -1,0 +1,10 @@
+.already_registered{
+    color: #c4b998;
+    font-size: 20px;
+}
+
+.link {
+    font-family: serif;
+    color: gray;
+    text-decoration: underline;
+}
