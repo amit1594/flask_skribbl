@@ -42,7 +42,7 @@ body {
         flex-direction: column;
         justify-content: space-between;
         margin-right: 8px;
-        color: white;
+        color: black;
         background-color: #4682B4;
     }
 
@@ -179,3 +179,52 @@ canvas {
 .wordSpace {
     width: 40%;
 }
+
+.player {
+    max-width: 15vw;
+    position: relative;
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+}
+
+    .player .rank {
+        width: 34px;
+        flex: 0 0 auto;
+        color: #000;
+        font-size: 18px;
+        font-weight: 700;
+        line-height: 30px;
+        text-align: center;
+    }
+
+    .player .info {
+        flex: 1 1 auto;
+        max-width: 100px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1;
+        color: #000;
+        text-align: center;
+    }
+        .player .info .name {
+                flex: 1 1 auto;
+            font-size: 15px;
+            font-weight: 700;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .player .info .score {
+            flex: 1 1 auto;
+            font-size: 14px;
+        }
+
+    .player .player_icon {
+        height: 48px;
+        width: 48px;
+    }

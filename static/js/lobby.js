@@ -53,6 +53,7 @@ socket.on( 'game_overlay', function(msg) {
     displayWordChoicesButtons("None");
     removeCanvasListeners();
     var eType = msg.type;
+    console.log(eType);
     var gameScreenStyle = document.getElementById("GameScreen").style
     var gameCanvasStyle = document.getElementById("gameCanvas").style
     var boardOverlayStyle = document.getElementById("boardOverlay").style
@@ -140,9 +141,12 @@ socket.on( 'game_overlay', function(msg) {
         boardOverlayTitle.innerText = "Round " + msg.curr_round;
     }
     else if (eType === "game_ended") {  // game ended scoreboard
+        gameCanvasStyle.display = "block";
         gameCanvasStyle.opacity = "0.2";
+        boardOverlayStyle.display = "block";
         boardOverlayTitle.innerText = "Game finished";
         writeBoardOverlayList(msg, boardOverlaylist);
+        console.log("game ended")
     }
     else if (eType === "lobby") {  // show lobby settings and players
         document.getElementById("messages").innerHTML = "";
@@ -173,22 +177,38 @@ socket.on( 'update_player_list', function(msg) {
     }
 })
 
+function create_score_div_html(place, name, points, img) {
+    my_str = "<div class=\"player\" id=\"player" + place + "\">"
+	my_str += "<div class=\"rank\">#" + place + "</div>"
+	my_str += "<div class=\"info\">"
+	my_str += "<p class=\"name\">" + name + "</p>"
+	my_str += "<p class=\"score\">Points: " + points + "</p></div>"
+	my_str += "<div class=\"player_icon\">"
+	my_str += "<img class=\"player_icon\" src=\"" + img + "\" alt=\"icon\">";
+    my_str += "</div>";
+    return my_str;
+}
+
+
 socket.on( 'update_scoreboard', function(msg) {
     var playerCount = 0;
     document.getElementById("scoreboardTblBody").innerHTML = "";
-    var scoreboardTblBody = document.getElementById("scoreboardTblBody").innerHTML;
+    var scoreboardTblBody = document.getElementById("scoreboardTblBody");
+    var width = document.getElementById("containerPlayerList").getBoundingClientRect().width;
     //console.log("Updating Scoreboard: ")
     //console.log(msg)
     for (var key of Object.keys(msg)) {
         playerCount += 1
-        document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>"
+        //scoreboardTblBody.innerHTML += "<tr><td><div class=\"card\" style=\"width: " + width + "px;color: black;\"><div class=\"card-content\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image is-48x48\"><img src=\"static\\Images\\penguin.png\" alt=\"Placeholder image\"></figure></div><div class=\"media-content\"><p class=\"is-4\">" + key+ "</p><p class=\"is-6\">Points: " + msg[key][0] + "</p></div></div></div></div></td></tr>"
+        /*
         document.getElementById("scoreboardTblBody").innerHTML += "<div class=\"columns is-mobile is-centered is-vcentered\">"
         document.getElementById("scoreboardTblBody").innerHTML += "<div class=\"column\"><img src=\"static\\Images\\penguin.png\">"
         document.getElementById("scoreboardTblBody").innerHTML += "</div><div class=\"column\">"
         document.getElementById("scoreboardTblBody").innerHTML += "<span class=\"subtitle\">" + playerCount + ". " + key + ': ' + msg[key][0] + "</span>"
-        document.getElementById("scoreboardTblBody").innerHTML += "</div></div></td></tr>"
+        document.getElementById("scoreboardTblBody").innerHTML += "</div></div></td></tr>"*/
         //document.getElementById("scoreboardTblBody").innerHTML += "<img src=\"static\\Images\\penguin.png\">"
-        //document.getElementById("scoreboardTblBody").innerHTML += "" + playerCount + ". " + key + ': ' + msg[key][0]  +"</td></tr>"
+        //document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + playerCount + ". " + key + ': ' + msg[key][0]  +"</td></tr>"
+        document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1])  + "</td></tr>"
     }
 })
 
@@ -624,6 +644,7 @@ socket.on( 'new_instruction', function(inst) {
         return;
     } else if (inst.inst_type == "fill") {
         //action = "fill"
+        red_border(document.getElementById("fill_button"));
         console.log("Filling: " + inst.x + "," + inst.y + "," + "[" + draw_color + ", 1]")
         context.fillFlood(guesserWidthFactor * inst.x, guesserHeightFactor * inst.y, draw_color)
         return;

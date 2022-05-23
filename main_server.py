@@ -3,7 +3,7 @@ import random
 from flask_socketio import SocketIO, join_room, leave_room, disconnect
 from flask_sqlalchemy import SQLAlchemy
 import logging
-from my_classes import LobbyHandler
+from my_classes import LobbyHandler, get_prohibited_words, get_prohibited_chars
 from engineio.payload import Payload
 import os
 import eventlet
@@ -15,7 +15,6 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nLzRfxyl8U5JGSh!'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///F:\\Computer_Science\\ALL_FLASK\\flask_skribbl\\myDB.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.dirname(os.path.realpath(__file__)) + '\\myDB.db'
-print(app.config['SQLALCHEMY_DATABASE_URI'])
 logging.getLogger('werkzeug').disabled = True  # disabling logs
 app.logger.disabled = True
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -25,16 +24,23 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 # app.config["SESSION_TYPE"] = "filesystem"
 # Session(app)
-lobby_handler = LobbyHandler(socketio)
+lobby_handler = LobbyHandler(socketio, db)
 next_guest_num = random.randint(1000, 2000)
 players_dict = dict()
 
 
 class UserTbl(db.Model):
+    __tablename__ = 'user_tbl'
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(15), unique=True)
     email = db.Column(db.String(50))
     password = db.Column(db.String(80))
+    image = db.Column(db.String(80))
+    wins = db.Column(db.Integer)
+    words_guessed_correctly = db.Column(db.Integer)
+    seconds_took_to_guess = db.Column(db.Integer)
+    all_guesses = db.Column(db.Integer)
+    all_games = db.Column(db.Integer)
 
 
 def get_user_by_username(uname):
@@ -123,12 +129,26 @@ def login():
 def register():
     if request.method != 'POST':  # form not submitted
         return render_template('register.html')
-    user = get_user_by_username(request.form.get('username'))
+    username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    prohibited_chars = get_prohibited_chars()
+    for c in prohibited_chars:
+        if c in username:
+            return render_template('register.html', alert="char", not_allowed=c, username=username, email=email,
+                       password=password)
+    prohibited_words = get_prohibited_words()
+    for word in prohibited_words:
+        if word in username:
+            return render_template('register.html', alert="word", not_allowed=word, username=username, email=email,
+                       password=password)
+    user = get_user_by_username(username)
     # do not allow usernames: 'type', 'username', 'word', 'artist', 'Guest + num'
     if user:
-        return "username taken"
-    new_user = UserTbl(username=request.form.get('username'), email=request.form.get('email'),
-                       password=request.form.get('password'))
+        return render_template('register.html', alert="taken", username=username, email=email,
+                       password=password)
+    new_user = UserTbl(username=username, email=email, password=password, image="anonymous",
+                       wins=0, words_guessed_correctly=0, seconds_took_to_guess=0, all_guesses=0, all_games=0)
     db.session.add(new_user)
     db.session.commit()
     session['username'] = new_user.username
@@ -162,7 +182,11 @@ def main_page():
     else:  # regular main view
         """if not g.user:  # not logged
             return redirect(url_for('login'))"""
-        return render_template('main.html', rooms=get_lobbies())
+        user = get_user_by_username(session['username'])
+        if user:
+            return render_template('main.html', rooms=get_lobbies(), image=user.image)
+        else:
+            return render_template('main.html', rooms=get_lobbies(), image="anonymous")
 
 
 @socketio.on('get_all_lobbies', namespace='/main_page')
@@ -249,7 +273,8 @@ def handle_join():
     if this_lobby.password is not None and this_lobby.password != room_pass:
         redirect(url_for('main_page'))
     join_room(room, namespace='/lobby')
-    this_lobby.add_player(username, request.sid)
+    user = get_user_by_username(session['username'])
+    this_lobby.add_player(username, request.sid, user)
     players_dict[request.sid] = (username, room)
     # send scoreboard
     if username == this_lobby.admin:
@@ -301,8 +326,19 @@ def start_game():
     if not this_lobby:
         return
     if this_lobby.admin == username and len(this_lobby.player_list) > 1:  # validating
-        this_lobby.start_game()
+        # this_lobby.start_game()
+        socketio.start_background_task(this_lobby.start_game())
         get_all_lobbies()
+        for player in this_lobby.player_list:
+            user = get_user_by_username(player.username)
+            if user:
+                user.all_games += 1
+        winner = this_lobby.winner
+        if winner:
+            user = get_user_by_username(winner.username)
+            if user:
+                user.wins += 1
+        db.session.commit()
 
 
 @socketio.on('update_lobby_settings', namespace='/lobby')
@@ -365,16 +401,32 @@ def process_client_instruction(json):
     if this_lobby:
         this_lobby.process_instruction(json, username)
 
+
 @socketio.on('new_chat_message', namespace='/lobby')
 def new_chat_message_handler(json):
     room = session['room']
     username = session['username']
     msg = json.get('message')
+    if msg == "win":
+        print(db, db.session)
+        user = get_user_by_username("amit123")
+        print(user)
+        user.wins += 1
+        db.session.commit()
     print("Got message")
     this_lobby = lobby_handler.get_lobby(room)
     if not this_lobby:
         return
-    this_lobby.new_chat_message(username, msg)
+    points, time_diff = this_lobby.new_chat_message(username, msg)
+    user = get_user_by_username(session['username'])
+    if user:
+        if points is not None:
+            user.words_guessed_correctly += 1
+            user.seconds_took_to_guess += time_diff
+        user.all_guesses += 1
+        db.session.commit()
+
+
 
 
 @app.route('/test', methods=['GET', 'POST'])
@@ -407,4 +459,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=False)
+    socketio.run(app, debug=True)

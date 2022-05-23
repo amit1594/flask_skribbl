@@ -10,8 +10,8 @@ color_dict = {"black": [0, 0, 0], "dimgray": [105, 105, 105], "purple": [128, 0,
 
 
 def validate_color(color_name):
-    print("color ops:", list(color_dict.keys()))
-    print(color_name, "in ops:", color_name in list(color_dict.keys()))
+    #print("color ops:", list(color_dict.keys()))
+    #print(color_name, "in ops:", color_name in list(color_dict.keys()))
     return color_name in list(color_dict.keys())
 
 
@@ -23,10 +23,27 @@ def validate_width(width):
         return False
 
 
+def get_prohibited_words():
+    lst = []
+    with open('static/words/prohibited.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            lst.append(line.rstrip())
+    with open('static/words/language_filter.txt', 'r') as f:
+        lines = f.readlines()
+        for line in lines:
+            lst.append(line.rstrip())
+    return lst
+
+
+def get_prohibited_chars():
+    return ["<", ">", ":", "\"", "{", "}"]
+
+
 def get_color_by_name(color_name):
     c = color_dict.get(color_name, [0, 0, 0])
     cJson = {'r': c[0], 'g': c[1], 'b': c[2]}
-    print("sending cololr:", cJson)
+    print("sending color:", cJson)
     return cJson
 
 
@@ -43,13 +60,19 @@ def getRandomNumbers(cap, amount):
     return my_nums
 
 
+def get_full_image_path(user):
+    if user:
+        return "/static/Images/" + user.image + ".png"
+    return "/static/Images/anonymous.png"
+
+
 def player_list_to_dict(player_list, with_scores):
     my_dict = dict()
     for player in player_list:
         if with_scores:
-            my_dict[player.username] = (player.score, "static/Images/anonymous.png")
+            my_dict[player.username] = (player.score, get_full_image_path(player.user))
         else:
-            my_dict[player.username] = "static/Images/anonymous.png"
+            my_dict[player.username] = get_full_image_path(player.user)
     return my_dict
 
 
@@ -62,10 +85,11 @@ def sort_player_dict(dicti):
 
 
 class Player:
-    def __init__(self, username, sid):
+    def __init__(self, username, sid, user_obj):
         self.username = username
         self.score = 0
         self.sid = sid
+        self.user = user_obj
 
     def add_points(self, points):
         self.score += points
@@ -73,10 +97,13 @@ class Player:
     def __str__(self):
         return "Player '" + self.username + "' has score: '" + str(self.score) + "'"
 
+    def is_guest(self):
+        return "Guest" in self.username
+
 
 class Turn:
     def __init__(self, artist, player_list, max_time, language, room, total_rounds, current_round, custom_words, sock,
-                 gamemode, points_limit, difficulty):
+                 gamemode, points_limit, difficulty, db):
         self.total_rounds = total_rounds  # int
         self.current_round = current_round  # int
         self.active = True
@@ -105,6 +132,7 @@ class Turn:
         self.width = 2
         self.action = 'pen'  # drawing action
         self.instructions = []
+        self.db = db
 
     def terminate(self):
         """ terminates the turn """
@@ -139,7 +167,6 @@ class Turn:
                 self.sock.emit('game_overlay', json, room=p.sid, namespace='/lobby')
             elif self.current_overlay == "turn_ended":
                 my_dict = self.guessed
-                my_dict[self.artist.username] = self.add_points_to_player(self.artist)
                 my_dict['type'] = 'turn_ended'
                 self.sock.emit('game_overlay', my_dict, room=self.room, namespace='/lobby')
 
@@ -148,7 +175,7 @@ class Turn:
         if not self.active:
             return
         my_dict = sort_player_dict(player_list_to_dict(self.player_list, True))
-        print(my_dict)
+        # print(my_dict)
         self.sock.emit('update_scoreboard', my_dict, room=self.room, namespace='/lobby')
 
     def get_player_object_by_username(self, username):
@@ -195,38 +222,55 @@ class Turn:
         return counter
 
     def add_points_to_player(self, player):
-        if not self.active or self.word is None:
-            return
+        if not self.active or self.word is None or player not in self.player_list:
+            return None, None
+        time_diff = self.max_turn_time - self.current_time
         if player.username == self.artist.username:
             if len(self.guessed) == 0:
                 self.artist.add_points(0)
-                return 0
+                return None, None
             try:
-                points_received = (400 * len(self.player_list) / len(self.guessed)) - (self.max_turn_time - self.current_time) + 20 * len(self.word)
+                points_received = (50 * len(self.guessed)) - time_diff + 20 * len(self.word)
                 points_received = max(int(points_received), 0)
                 self.artist.add_points(points_received)
             except ZeroDivisionError:
                 points_received = 0
                 self.artist.add_points(0)
         else:
-            points_received = int(1000 - (5 * (self.max_turn_time - self.current_time)) - 50 * len(self.guessed) + 10 * len(self.word))
+            points_received = int(1000 - (5 * time_diff) - 50 * len(self.guessed) + 10 * len(self.word))
             player.add_points(points_received)
+            '''if not player.is_guest():
+                print(player.user)
+                player.user.words_guessed_correctly += 1
+                player.user.seconds_took_to_guess += time_diff
+                self.db.session.commit()
+                print(self.db, self.db.session)
+                print("commited: ", player.user.words_guessed_correctly)'''
         self.send_current_scoreboard()
         if player.score > self.points_limit:
             self.terminate()
             self.return_end_of_game = True
             return
-        return points_received
+        print("Gave", player.username, points_received, "Points")
+        return points_received, time_diff
 
     def new_chat_message(self, username, message):
         """ processes a  chat message"""
         if not self.active or not self.word:
-            return
+            return None, None
         # put in language filter
+        prohibited_chars = get_prohibited_chars()
+        for c in prohibited_chars:
+            if c in message:
+                return None, None
+        prohibited_words = get_prohibited_words()
+        for word in prohibited_words:
+            if word in message:
+                return None, None
         player = self.get_player_object_by_username(username)
         if not player:  # unrecognized username
             print("unrecognized username")
-            return
+            return None, None
         json = {'username': username, 'message': message}
         if username in self.guessed.keys() or username == self.artist.username:  # if guessed correctly before
             json['type'] = "guessed_chat"
@@ -234,12 +278,15 @@ class Turn:
                 if tempP.username in self.guessed.keys():
                     self.sock.emit('chat_message', json, room=tempP.sid, namespace='/lobby')
             self.send_to_artist('chat_message', json)
-        elif message.upper() == self.word.upper():  # right word
-            points = self.add_points_to_player(player)
-            self.guessed[username] = points
+        elif message.upper() == self.word.upper():  # correct guess
+            print("Giving guesser points for correct guess")
+            points, time_diff = self.add_points_to_player(player)
+            if points is not None:
+                self.guessed[username] = points
             self.reduce_time(self.current_time // 3)
             self.all_guessed = self.did_all_guess()
             self.sock.emit('chat_message', {'username': username, 'type': 'correct'}, room=self.room, namespace='/lobby')
+            return points, time_diff
         else:
             for tempP in self.player_list:
                 if tempP.username == username and self.char_difference(message) == 1:  # almost correct
@@ -248,6 +295,7 @@ class Turn:
                 else:  # every one else sees it as a regular message
                     json['type'] = "regular"
                     self.sock.emit('chat_message', json, room=tempP.sid, namespace='/lobby')
+        return None, None
 
     '''def add_stroke(self, stroke_data, username):
         """ appends stroke data and emits to all to draw the stroke"""
@@ -395,17 +443,17 @@ class Turn:
         """ generates 3 words from the specified language (will be English if incorrect language) """
         path = os.path.dirname(os.path.realpath(__file__))
         if self.language == "English":
-            path += "\\words\\english.txt"
+            path += "\\static\\words\\english.txt"
         elif self.language == "Hebrew":
-            path += "\\words\\hebrew.txt"
+            path += "\\static\\words\\hebrew.txt"
         elif self.language == "Italian":
-            path += "\\words\\italian.txt"
+            path += "\\static\\words\\italian.txt"
         elif self.language == "Dutch":
-            path += "words\\dutch.txt"
+            path += "\\static\\words\\dutch.txt"
         elif self.language == "French":
-            path += "words\\french.txt"
+            path += "\\static\\words\\french.txt"
         elif self.language == "German":
-            path += "\\words\\german.txt"
+            path += "\\static\\words\\german.txt"
         else:
             return "test", "testy", "error"
         with open(path, 'rb') as f:
@@ -565,6 +613,9 @@ class Turn:
             # print("turn timer: " + str(self.current_time))
             time.sleep(1)
         self.current_overlay = "turn_ended"
+        points, time_diff = self.add_points_to_player(self.artist)
+        if points is not None:
+            self.guessed[self.artist.username] = points
         self.send_current_overlay()
         self.sock.emit('chat_message', {'type': 'turn_ended', 'last_word': self.word}, room=self.room, namespace='/lobby')
         time.sleep(5)  # allow for 5 seconds of the end of turn overlay
@@ -574,7 +625,7 @@ class Turn:
 
 
 class Lobby:
-    def __init__(self, lobby_id, password, sock):
+    def __init__(self, lobby_id, password, sock, db):
         self.lobby_id = lobby_id
         self.player_list = []
         self.admin = ""  # string, will update when a player joins
@@ -589,12 +640,14 @@ class Lobby:
         self.custom_words = []
         self.current_turn = None  # will be changed once starts
         self.sock = sock
+        self.db = db
+        self.winner = None
 
     def is_full(self):
         ''' max players allowed in a single lobby is 10 '''
         return len(self.player_list) >= 10
 
-    def add_player(self, username, sid):
+    def add_player(self, username, sid, user_obj):
         """ creates a Player object by its username and sid, and appends him to the player list. """
         if len(self.player_list) == 0:
             self.admin = username
@@ -602,7 +655,7 @@ class Lobby:
             if player.username == username:
                 print("Player {} already in lobby {}".format(username, self.lobby_id))
                 return
-        new_player = Player(username, sid)
+        new_player = Player(username, sid, user_obj)
         self.player_list.append(new_player)
         self.sock.emit('game_overlay', {'type': 'lobby'}, room=sid, namespace='/lobby')
         print("sent scoreboard")
@@ -685,12 +738,18 @@ class Lobby:
         queue = self.player_list.copy()
         return queue
 
+    def get_game_results(self):
+        my_dict = sort_player_dict(player_list_to_dict(self.player_list, True))
+        winner = list(my_dict)[0]
+        return winner, my_dict
+
     def start_game(self):
         """ starts the game, should be a thread target """
+        self.winner = None
         self.started = True
         curr_round = 1
         should_end = False
-        while not should_end:
+        while len(self.player_list) > 1 and not should_end:
             self.sock.emit('game_overlay', {'type': 'new_round', 'curr_round': curr_round}, room=self.lobby_id, namespace='/lobby')
             time.sleep(2)  # allow 2 seconds of overlay
             curr_queue = self.get_player_queue()
@@ -700,19 +759,21 @@ class Lobby:
                 if artist in self.player_list:  # ensure artist did not quit
                     curr_turn = Turn(artist, self.player_list, self.draw_time, self.language, self.lobby_id,
                                      self.rounds, curr_round, self.custom_words, self.sock, self.gamemode,
-                                     self.points_limit, self.difficulty)
+                                     self.points_limit, self.difficulty, self.db)
                     self.current_turn = curr_turn
                     should_end = curr_turn.start_turn()
             curr_round += 1
             if self.gamemode == "Classic" and curr_round > self.rounds:
                 should_end = True
         if len(self.player_list) > 0:
-            my_dict = player_list_to_dict(self.player_list, True)
+            winner, my_dict = self.get_game_results()
             my_dict['type'] = 'game_ended'
-            self.sock.emit('game_overlay', my_dict, room=self.lobby_id)
+            self.sock.emit('game_overlay', my_dict, room=self.lobby_id, namespace='/lobby')
             time.sleep(10)  # allow 10 seconds of game ended overlay
         self.sock.emit('game_overlay', {'type': 'lobby'}, room=self.lobby_id, namespace='/lobby')
         self.started = False
+        if len(self.player_list) > 1:
+            self.winner = winner
         print("Game done")
 
     def add_stroke(self, stroke_data, username):
@@ -727,7 +788,8 @@ class Lobby:
 
     def new_chat_message(self, username, message):
         if self.current_turn:
-            self.current_turn.new_chat_message(username, message)
+            return self.current_turn.new_chat_message(username, message)
+        return None, None
 
     def set_turn_word(self, word, username):
         if self.current_turn:
@@ -759,15 +821,16 @@ class Lobby:
 
 
 class LobbyHandler:
-    def __init__(self, socket):
+    def __init__(self, socket, db):
         self.lobbies = dict()
         self.sock = socket
+        self.db = db
 
     def add_lobby(self, lobby_id, password):
         if lobby_id in self.lobbies.keys():
             print("Lobby {} already exists".format(lobby_id))
             return
-        new_lobby = Lobby(lobby_id, password, self.sock)
+        new_lobby = Lobby(lobby_id, password, self.sock, self.db)
         self.lobbies[lobby_id] = new_lobby
 
     def remove_lobby(self, lobby_id):

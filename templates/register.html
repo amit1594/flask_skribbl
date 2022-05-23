@@ -4,10 +4,11 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login</title>
+    <title>Register</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/registration.js')}}"></script>
 </head>
 
 <body>
@@ -21,16 +22,25 @@
                             <h1 style="text-align: center; color: #00008B" class="title is-3 is-spaced">Register</h1>
                         </tr>
                         <tr>
-                            <form method="POST" action="{{ url_for('register') }}">
+                            <form method="POST" action="{{ url_for('register') }}" onsubmit="return validate_username()">
                                 <!-- username -->
                                 <div class="field">
                                     <label class="label">Username</label>
                                     <div class="control has-icons-left has-icons-right">
-                                        <input class="input" type="text" name="username" maxlength="15"
-                                               placeholder="Username" required>
+                                        <input class="input" type="text" id="uName" name="username" maxlength="15" value="{{username}}"
+                                               placeholder="Username" oninput="validate_username()" required>
                                         <span class="icon is-small is-left">
-                      <i class="fas fa-user"></i>
-                    </span>
+                                          <i class="fas fa-user"></i>
+                                        </span>
+                                        <p id="username_help" class="help has-text-left">
+                                        {% if alert == "char" %}
+                                            Username can not include the character '{{not_allowed}}'
+                                        {% elif alert == "word" %}
+                                            Username can not include the word '{{not_allowed}}'
+                                        {% elif alert == "taken" %}
+                                            Username taken
+                                        {% endif %}
+                                        </p>
                                     </div>
                                 </div>
                                 <!-- password -->
@@ -38,7 +48,7 @@
                                     <label class="label">Password</label>
                                     <p class="control has-icons-left">
                                         <input class="input" type="password" name="password" maxlength="15"
-                                               placeholder="Password" required>
+                                               placeholder="Password" value="{{password}}" required>
                                         <span class="icon is-small is-left">
                       <i class="fas fa-lock"></i>
                     </span>
@@ -48,20 +58,22 @@
                                 <div class="field">
                                     <label class="label">Email</label>
                                     <p class="control has-icons-left">
-                                        <input class="input" type="email" name="email" placeholder="email@email.com"
-                                               required>
+                                        <input class="input" type="email" name="email" placeholder="example@example.com"
+                                               value="{{email}}" required>
                                         <span class="icon is-small is-left">
                       <i class="fas fa-envelope"></i>
                     </span>
                                     </p>
                                 </div>
                                 <!-- submit -->
-                                <div class="field">
-                                    <p class="control">
-                                        <button type="submit" class="button is-success">
-                                            Register
-                                        </button>
-                                    </p>
+                                <div class="container" style="display: flex;justify-content: center;">
+                                    <div class="field">
+                                        <p class="control">
+                                            <button type="submit" class="button is-success">
+                                                Register
+                                            </button>
+                                        </p>
+                                    </div>
                                 </div>
                             </form>
                         </tr>

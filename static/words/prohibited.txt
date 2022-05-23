@@ -1,0 +1,8 @@
+type
+def
+function
+static
+lobby
+artist
+word
+Guest

@@ -55,4 +55,4 @@ import os
 # print(os.getrandom(12, flag=os.GRND_NONBLOCK))
 print(os.path.dirname(os.path.realpath(__file__)))
 # print( ord("ת"))'''
-print("test")
+print(list({5: 2, 2: 4, 3: 9}))
