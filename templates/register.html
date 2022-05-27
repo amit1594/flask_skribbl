@@ -7,6 +7,8 @@
     <title>Register</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script type="text/javascript" src="{{url_for('static', filename='js/registration.js')}}"></script>
 </head>
@@ -22,7 +24,7 @@
                             <h1 style="text-align: center; color: #00008B" class="title is-3 is-spaced">Register</h1>
                         </tr>
                         <tr>
-                            <form method="POST" action="{{ url_for('register') }}" onsubmit="return validate_username()">
+                            <form method="POST" action="{{ url_for('register') }}" onsubmit="return encrypt_pass()">
                                 <!-- username -->
                                 <div class="field">
                                     <label class="label">Username</label>
@@ -48,7 +50,7 @@
                                     <label class="label">Password</label>
                                     <p class="control has-icons-left">
                                         <input class="input" type="password" name="password" maxlength="15"
-                                               placeholder="Password" value="{{password}}" required>
+                                               placeholder="Password" id="password" required>
                                         <span class="icon is-small is-left">
                       <i class="fas fa-lock"></i>
                     </span>

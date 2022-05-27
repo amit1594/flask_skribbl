@@ -1,10 +1,11 @@
 from flask import Flask, render_template, request, redirect, g, session, url_for
 import random
-from flask_socketio import SocketIO, join_room, leave_room, disconnect
+from flask_socketio import SocketIO, join_room, leave_room
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import logging
-from my_classes import LobbyHandler, get_prohibited_words, get_prohibited_chars
+from classes.lobby_handler import LobbyHandler
+from helpers import get_prohibited_words, get_prohibited_chars
 from engineio.payload import Payload
 import os
 import eventlet
@@ -15,7 +16,6 @@ eventlet.monkey_patch()
 Payload.max_decode_packets = 200
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nLzRfxyl8U5JGSh!'
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///F:\\Computer_Science\\ALL_FLASK\\flask_skribbl\\myDB.db'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.dirname(os.path.realpath(__file__)) + '\\myDB.db'
 # logging.getLogger('werkzeug').disabled = True  # disabling logs
 # app.logger.disabled = True
@@ -24,8 +24,6 @@ db = SQLAlchemy(app)
 socketio = SocketIO(app)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-# app.config["SESSION_TYPE"] = "filesystem"
-# Session(app)
 lobby_handler = LobbyHandler(socketio, db)
 next_guest_num = random.randint(1000, 2000)
 players_dict = dict()
@@ -192,19 +190,16 @@ def register():
     prohibited_chars = get_prohibited_chars()
     for c in prohibited_chars:
         if c in username:
-            return render_template('register.html', alert="char", not_allowed=c, username=username, email=email,
-                                   password=password)
+            return render_template('register.html', alert="char", not_allowed=c, username=username, email=email)
     prohibited_words = get_prohibited_words()
     for word in prohibited_words:
         if word in username:
-            return render_template('register.html', alert="word", not_allowed=word, username=username, email=email,
-                                   password=password)
+            return render_template('register.html', alert="word", not_allowed=word, username=username, email=email)
     user = get_user_by_username(username)
     # do not allow usernames: 'type', 'username', 'word', 'artist', 'Guest + num'
     if user:
-        return render_template('register.html', alert="taken", username=username, email=email,
-                               password=password)
-    new_user = UserTbl(username=username, email=email, password=password, image="anonymous",
+        return render_template('register.html', alert="taken", username=username, email=email)
+    new_user = UserTbl(username=username, email=email, image="anonymous",
                        wins=0, words_guessed_correctly=0, seconds_took_to_guess=0, all_guesses=0, all_games=0,
                        games_winrate=0, correct_guess_rate=0, average_time_to_guess_correctly=0)
     db.session.add(new_user)
@@ -221,7 +216,7 @@ def update_user_info():
     if not user:
         return render_template('no_guests_allowed.html')
     if request.method != 'POST':  # form not submitted
-        return render_template('update_user_info.html', username=username, email=user.email, password=user.password,
+        return render_template('update_user_info.html', username=username, email=user.email,
                                image=user.image, my_icons=get_icons_for_user(username))
     attempted_username = request.form.get('username')
     email = request.form.get('email')
@@ -230,16 +225,16 @@ def update_user_info():
     for c in prohibited_chars:
         if c in attempted_username:
             return render_template('update_user_info.html', alert="char", not_allowed=c, username=attempted_username, email=email,
-                                   password=password, image=user.image, my_icons=get_icons_for_user(username))
+                                   image=user.image, my_icons=get_icons_for_user(username))
     prohibited_words = get_prohibited_words()
     for word in prohibited_words:
         if word in attempted_username:
             return render_template('update_user_info.html', alert="word", not_allowed=word, username=attempted_username, email=email,
-                                   password=password, image=user.image, my_icons=get_icons_for_user(username))
+                                   image=user.image, my_icons=get_icons_for_user(username))
     existing_user = get_user_by_username(attempted_username)
-    if existing_user:
+    if username != attempted_username and existing_user:
         return render_template('update_user_info.html', alert="taken", username=attempted_username, email=email,
-                               password=password, image=user.image, my_icons=get_icons_for_user(username))
+                               image=user.image, my_icons=get_icons_for_user(username))
 
     user.username = attempted_username
     user.password = password
@@ -548,30 +543,6 @@ def new_chat_message_handler(json):
         user.correct_guess_rate = round(((user.words_guessed_correctly + 1) / (user.all_guesses + 1)) * 100, 1)
         user.all_guesses += 1
         db.session.commit()
-
-
-@app.route('/test', methods=['GET', 'POST'])
-def testi():
-    return render_template('test.html')
-
-
-@socketio.on('please_disconnect', namespace='/test')
-def please_disconnect():
-    disconnect()
-
-
-@socketio.on('disconnect', namespace='/test')
-def did_disconnect():
-    print("Yes")
-
-
-@app.route('/test2', methods=['GET', 'POST'])
-def testo():
-    get_all_icons()
-    if request.method == 'POST':
-        my_input = request.form.get('my_input')
-        return render_template('test2.html', my_input=my_input)
-    return render_template('index.html')
 
 
 @app.route('/profile', methods=['GET', 'POST'])

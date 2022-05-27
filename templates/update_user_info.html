@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/update_user_info.css')}}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
 </head>
@@ -108,7 +110,7 @@
                             <h1 style="text-align: center; color: #00008B" class="title is-3 is-spaced">Update your info!</h1>
                         </tr>
                         <tr>
-                            <form method="POST" action="{{ url_for('update_user_info') }}" onsubmit="return validate_username()">
+                            <form method="POST" action="{{ url_for('update_user_info') }}" onsubmit="return encrypt_pass()">
                                 <!-- username -->
                                 <div class="field">
                                     <label class="label">Username</label>
@@ -134,7 +136,7 @@
                                     <label class="label">Password</label>
                                     <p class="control has-icons-left">
                                         <input class="input" type="password" name="password" maxlength="15"
-                                               placeholder="Password" value="{{password}}" required>
+                                               placeholder="Password" id="password" required>
                                         <span class="icon is-small is-left">
                       <i class="fas fa-lock"></i>
                     </span>
