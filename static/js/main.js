@@ -178,3 +178,12 @@ function validateForm(){
     document.getElementById("room_id_help1").style.display = "none";
     return true;
 }
+
+function request_icon_change(icon) {
+    socket.emit("request_icon_change", {"icon": icon})
+}
+
+socket.on( 'icon_changed', function(json) {
+    document.getElementById('user_icon').src = "/static/Images/" + json.icon + ".png";
+    console.log("changed icon")
+})

@@ -7,10 +7,11 @@ from my_classes import LobbyHandler, get_prohibited_words, get_prohibited_chars
 from engineio.payload import Payload
 import os
 import eventlet
+
 eventlet.monkey_patch()
 
 # configs
-Payload.max_decode_packets = 100
+Payload.max_decode_packets = 200
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nLzRfxyl8U5JGSh!'
 # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///F:\\Computer_Science\\ALL_FLASK\\flask_skribbl\\myDB.db'
@@ -47,6 +48,47 @@ def get_user_by_username(uname):
     """Returns the user from the DB that's username is the one inputted"""
     myUser = UserTbl.query.filter_by(username=uname).first()
     return myUser
+
+
+def get_restricted_icons():
+    win_restricted = {'yellow_diamond': 1, 'blue_diamond': 3, 'orange_diamond': 5, 'green_diamond': 10,
+                      'red_diamond': 30, 'black_diamond': 50, 'multi_color_diamond': 100}
+    correct_guesses = {'tan_diamond': 10, 'pink_diamond': 30, 'purple_diamond': 50}
+    return win_restricted, correct_guesses
+
+
+def get_icons_for_user(username):
+    all_icons = get_all_icons()
+    user = get_user_by_username(username)
+    if not user:
+        return all_icons
+    wins = user.wins
+    correct_guesses = user.words_guessed_correctly
+    win_restricted, correct_guessess_restricted = get_restricted_icons()
+    for icon, wins_needed in win_restricted.items():
+        if wins_needed <= wins:
+            all_icons[icon] = ''
+        else:
+            break
+    for icon, guesses_needed in correct_guessess_restricted.items():
+        if guesses_needed <= correct_guesses:
+            all_icons[icon] = ''
+        else:
+            break
+    return all_icons
+
+
+def get_all_icons():
+    # all images are saved via png
+    """icons = ["anonymous", "cat", "fries", "guitar", "penguin", "pirate", "plane", "plant", "star",
+             "tan_diamond", "pink_diamond", "yellow_diamond", "blue_diamond", "purple_diamond",
+             "orange_diamond", "green_diamond", "red_diamond", "black_diamond", "multi_color_diamond"]"""
+    icon_dict = {'anonymous': '', 'cat': '', 'fries': '', 'guitar': '', 'penguin': '', 'pirate': '', 'plane': '',
+                 'plant': '', 'star': '', 'tan_diamond': '10 correct guesses', 'pink_diamond': '30 correct guesses',
+                 'yellow_diamond': '1 win', 'blue_diamond': '3 wins', 'purple_diamond': '50 correct guesses',
+                 'orange_diamond': '5 wins', 'green_diamond': '10 wins', 'red_diamond': '30 wins',
+                 'black_diamond': '50 wins', 'multi_color_diamond': '100 wins'}
+    return icon_dict
 
 
 def get_lobby_player_dict(my_lobby):
@@ -109,7 +151,7 @@ def index():
     return render_template('index.html')
 
 
-@app.route('/login',  methods=['POST', 'GET'])
+@app.route('/login', methods=['POST', 'GET'])
 def login():
     if request.method != 'POST':  # form not submitted
         return render_template('login.html')
@@ -125,7 +167,7 @@ def login():
     return render_template('login.html', cred_error="Credentials incorrect")
 
 
-@app.route('/register',  methods=['POST', 'GET'])
+@app.route('/register', methods=['POST', 'GET'])
 def register():
     if request.method != 'POST':  # form not submitted
         return render_template('register.html')
@@ -136,17 +178,17 @@ def register():
     for c in prohibited_chars:
         if c in username:
             return render_template('register.html', alert="char", not_allowed=c, username=username, email=email,
-                       password=password)
+                                   password=password)
     prohibited_words = get_prohibited_words()
     for word in prohibited_words:
         if word in username:
             return render_template('register.html', alert="word", not_allowed=word, username=username, email=email,
-                       password=password)
+                                   password=password)
     user = get_user_by_username(username)
     # do not allow usernames: 'type', 'username', 'word', 'artist', 'Guest + num'
     if user:
         return render_template('register.html', alert="taken", username=username, email=email,
-                       password=password)
+                               password=password)
     new_user = UserTbl(username=username, email=email, password=password, image="anonymous",
                        wins=0, words_guessed_correctly=0, seconds_took_to_guess=0, all_guesses=0, all_games=0)
     db.session.add(new_user)
@@ -156,8 +198,10 @@ def register():
     return redirect(url_for('main_page'))
 
 
-@app.route('/main',  methods=['POST', 'GET'])
+@app.route('/main', methods=['POST', 'GET'])
 def main_page():
+    username = session['username']
+    user = get_user_by_username(username)
     if request.method == 'POST':  # requesting to join/create a lobby
         op = request.form.get('op')
         room = request.form.get('room_id')
@@ -169,7 +213,8 @@ def main_page():
                 session['room_password'] = room_password
                 return redirect(url_for('lobby'))
             else:  # lobby id already exists
-                return render_template('main.html', rooms=get_lobbies(), prev_id=room, prev_pass=room_password, alert="create")
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(), prev_id=room,
+                                       prev_pass=room_password, alert="create", guest=user is None)
         elif op == "join":  # joining a room
             actual_pass = lobby_handler.get_lobby(room).password
             # print("Real pass is '{}', got pass '{}'". format(actual_pass, room_password))
@@ -178,15 +223,31 @@ def main_page():
                 session['room_password'] = room_password
                 return redirect(url_for('lobby'))
             else:  # incorrect password
-                return render_template('main.html', rooms=get_lobbies(), prev_id=room, prev_pass=room_password, alert="join")
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(), prev_id=room,
+                                       prev_pass=room_password, alert="join", guest=user is None)
     else:  # regular main view
         """if not g.user:  # not logged
             return redirect(url_for('login'))"""
-        user = get_user_by_username(session['username'])
         if user:
-            return render_template('main.html', rooms=get_lobbies(), image=user.image)
+            return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(),
+                                   image=user.image, guest=user is None)
         else:
-            return render_template('main.html', rooms=get_lobbies(), image="anonymous")
+            return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(),
+                                   image="anonymous", guest=user is None)
+
+
+@socketio.on('request_icon_change', namespace='/main_page')
+def handle_icon_change(json):
+    username = session['username']
+    options = get_icons_for_user(username)
+    icon = json.get('icon', None)
+    if options.get(icon, '') == '':
+        user = get_user_by_username(username)
+        user.image = icon
+        db.session.commit()
+        socketio.emit('icon_changed', {'icon': icon}, room=request.sid, namespace='/main_page')
+    else:
+        print('icon denied')
 
 
 @socketio.on('get_all_lobbies', namespace='/main_page')
@@ -353,7 +414,8 @@ def update_lobby_settings(json):
         if this_lobby.admin == username:  # validating that the admin sent it
             custom_words = json.get('custom_words').split(",")
             this_lobby.update_settings(json.get('language'), int(json.get('draw_time')), int(json.get('rounds')),
-                                       json.get('gamemode'), int(json.get('points_limit')), json.get('difficulty'), custom_words)
+                                       json.get('gamemode'), int(json.get('points_limit')), json.get('difficulty'),
+                                       custom_words)
     except ValueError:
         print("Value error")
         print(json.get('language'), json.get('draw_time'), json.get('rounds'), json.get('custom_words').split(","))
@@ -427,8 +489,6 @@ def new_chat_message_handler(json):
         db.session.commit()
 
 
-
-
 @app.route('/test', methods=['GET', 'POST'])
 def testi():
     return render_template('test.html')
@@ -446,6 +506,7 @@ def did_disconnect():
 
 @app.route('/test2', methods=['GET', 'POST'])
 def testo():
+    get_all_icons()
     if request.method == 'POST':
         my_input = request.form.get('my_input')
         return render_template('test2.html', my_input=my_input)
@@ -459,4 +520,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=True, host="0.0.0.0", port=80)

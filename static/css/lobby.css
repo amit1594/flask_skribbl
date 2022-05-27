@@ -211,7 +211,7 @@ canvas {
         text-align: center;
     }
         .player .info .name {
-                flex: 1 1 auto;
+            flex: 1 1 auto;
             font-size: 15px;
             font-weight: 700;
             overflow: hidden;

@@ -847,4 +847,3 @@ class LobbyHandler:
             return self.lobbies[lobby_id]
         print("Lobby {} does not exist".format(lobby_id))
         return None
-

@@ -5,14 +5,61 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
 </head>
 <body>
-<h1> Hello {{ session.username }}</h1>
+<div class="greet_div">
+  <div class="info">
+    <p class="greet">Hello {{ session.username }}</p>
+  </div>
+  <figure class="image is-64x64">
+    <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div" src="static/Images/{{image}}.png" alt="Image">
+  </figure>
+</div>
 
 <!-- Creating a room -->
 <button class="js-modal-trigger" data-target="room_creation_modal">
   Create a room
 </button>
+
+<div id="icon_choosing_div" class="modal">
+  <div class="modal-background"></div>
+  <div style="overflow: hidden;" class="modal-content">
+    <div class="container">
+      <div class="columns is-centered">
+          <div class="column is-half">
+            <h1 class="title is-1 has-text-centered has-text-primary">
+              {% if guest %}
+                Login to change icon
+              {% else %}
+                Choose an icon
+              {% endif %}
+            </h1>
+            <div id="icon_options" class="icon_options">
+              {% for icon, text in my_icons.items() %}
+                <div class="icon_figure_container">
+                  <figure class="image is-64x64 child_icon_figure">
+                    <div class="icon_container">
+                      {% if text != "" %}
+                      <img src="static/Images/{{icon}}.png" alt="failed to load">
+                        <div class="icon_text">
+                          {{text}}
+                        </div>
+                      {% else %}
+                        <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png" alt="failed to load">
+                      {% endif %}
+                    </div>
+                  </figure>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
 <div id="room_creation_modal" class="modal">
   <div class="modal-background"></div>
   <div class="modal-content">
@@ -151,6 +198,5 @@
   {% endif %}
 {% endif %}
 <script src="{{url_for('static', filename='js/main.js')}}"></script>
-<img src="static/Images/{{image}}.png">
 </body>
 </html>
