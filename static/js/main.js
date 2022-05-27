@@ -1,5 +1,5 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + "/main_page");
-makeWork();
+make_modals_work();
 socket.on( 'connect', function() {
     console.log("connected to socket");
 })
@@ -65,11 +65,11 @@ socket.on( 'update_lobbies_list', function(json) {
         newTb.appendChild(tr);
         table.appendChild(newTb);
     }
-    makeWork();
+    make_modals_work();
     //document.getElementById('testTitle').innerText = json.msg;
 })
 
-function makeWork() {
+/*function make_modals_work() {
   // Functions to open and close a modal
   function openModal($el) {
     $el.classList.add('is-active');
@@ -113,7 +113,7 @@ function makeWork() {
       closeAllModals();
     }
   });
-}
+}*/
 
 // modal js:
 /*document.addEventListener('DOMContentLoaded', () => {

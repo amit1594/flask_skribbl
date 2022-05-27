@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, g, session, url_for
 import random
 from flask_socketio import SocketIO, join_room, leave_room, disconnect
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import text
 import logging
 from my_classes import LobbyHandler, get_prohibited_words, get_prohibited_chars
 from engineio.payload import Payload
@@ -42,6 +43,9 @@ class UserTbl(db.Model):
     seconds_took_to_guess = db.Column(db.Integer)
     all_guesses = db.Column(db.Integer)
     all_games = db.Column(db.Integer)
+    games_winrate = db.Column(db.Float)
+    correct_guess_rate = db.Column(db.Float)
+    average_time_to_guess_correctly = db.Column(db.Float)
 
 
 def get_user_by_username(uname):
@@ -134,6 +138,17 @@ def get_lobbies():
     return my_rooms
 
 
+def validate_change_icon(icon, username, sid, my_namespace):
+    options = get_icons_for_user(username)
+    if options.get(icon, '') == '':
+        user = get_user_by_username(username)
+        user.image = icon
+        db.session.commit()
+        socketio.emit('icon_changed', {'icon': icon}, room=sid, namespace=my_namespace)
+    else:
+        print('icon denied')
+
+
 @app.before_request
 def before_request():
     """g.user = None
@@ -190,12 +205,56 @@ def register():
         return render_template('register.html', alert="taken", username=username, email=email,
                                password=password)
     new_user = UserTbl(username=username, email=email, password=password, image="anonymous",
-                       wins=0, words_guessed_correctly=0, seconds_took_to_guess=0, all_guesses=0, all_games=0)
+                       wins=0, words_guessed_correctly=0, seconds_took_to_guess=0, all_guesses=0, all_games=0,
+                       games_winrate=0, correct_guess_rate=0, average_time_to_guess_correctly=0)
     db.session.add(new_user)
     db.session.commit()
     session['username'] = new_user.username
     g.user = user
     return redirect(url_for('main_page'))
+
+
+@app.route('/update_user_info', methods=['POST', 'GET'])
+def update_user_info():
+    username = session['username']
+    user = get_user_by_username(username)
+    if not user:
+        return render_template('no_guests_allowed.html')
+    if request.method != 'POST':  # form not submitted
+        return render_template('update_user_info.html', username=username, email=user.email, password=user.password,
+                               image=user.image, my_icons=get_icons_for_user(username))
+    attempted_username = request.form.get('username')
+    email = request.form.get('email')
+    password = request.form.get('password')
+    prohibited_chars = get_prohibited_chars()
+    for c in prohibited_chars:
+        if c in attempted_username:
+            return render_template('update_user_info.html', alert="char", not_allowed=c, username=attempted_username, email=email,
+                                   password=password, image=user.image, my_icons=get_icons_for_user(username))
+    prohibited_words = get_prohibited_words()
+    for word in prohibited_words:
+        if word in attempted_username:
+            return render_template('update_user_info.html', alert="word", not_allowed=word, username=attempted_username, email=email,
+                                   password=password, image=user.image, my_icons=get_icons_for_user(username))
+    existing_user = get_user_by_username(attempted_username)
+    if existing_user:
+        return render_template('update_user_info.html', alert="taken", username=attempted_username, email=email,
+                               password=password, image=user.image, my_icons=get_icons_for_user(username))
+
+    user.username = attempted_username
+    user.password = password
+    user.email = email
+    db.session.commit()
+    session['username'] = attempted_username
+    g.user = user
+    return redirect(url_for('main_page'))
+
+
+@socketio.on('request_icon_change', namespace='/update_user_info')
+def handle_icon_change_from_update_user_info(json):
+    username = session['username']
+    icon = json.get('icon', None)
+    validate_change_icon(icon, username, request.sid, '/update_user_info')
 
 
 @app.route('/main', methods=['POST', 'GET'])
@@ -237,17 +296,10 @@ def main_page():
 
 
 @socketio.on('request_icon_change', namespace='/main_page')
-def handle_icon_change(json):
+def handle_icon_change_from_main_page(json):
     username = session['username']
-    options = get_icons_for_user(username)
     icon = json.get('icon', None)
-    if options.get(icon, '') == '':
-        user = get_user_by_username(username)
-        user.image = icon
-        db.session.commit()
-        socketio.emit('icon_changed', {'icon': icon}, room=request.sid, namespace='/main_page')
-    else:
-        print('icon denied')
+    validate_change_icon(icon, username, request.sid, '/main_page')
 
 
 @socketio.on('get_all_lobbies', namespace='/main_page')
@@ -388,17 +440,22 @@ def start_game():
         return
     if this_lobby.admin == username and len(this_lobby.player_list) > 1:  # validating
         # this_lobby.start_game()
-        socketio.start_background_task(this_lobby.start_game())
-        get_all_lobbies()
         for player in this_lobby.player_list:
+            print("scanning " + player.username)
             user = get_user_by_username(player.username)
             if user:
+                print("added a game to " + player.username)
                 user.all_games += 1
+                user.games_winrate = round((user.wins / (user.all_games + 1)) * 100, 1)
+        db.session.commit()
+        socketio.start_background_task(this_lobby.start_game())
+        get_all_lobbies()
         winner = this_lobby.winner
         if winner:
-            user = get_user_by_username(winner.username)
+            user = get_user_by_username(winner)
             if user:
                 user.wins += 1
+                user.games_winrate = round(((user.wins + 1) / user.all_games) * 100, 1)
         db.session.commit()
 
 
@@ -479,12 +536,16 @@ def new_chat_message_handler(json):
     this_lobby = lobby_handler.get_lobby(room)
     if not this_lobby:
         return
-    points, time_diff = this_lobby.new_chat_message(username, msg)
+    is_a_guess, points, time_diff = this_lobby.new_chat_message(username, msg)
+    if not is_a_guess:
+        return
     user = get_user_by_username(session['username'])
     if user:
         if points is not None:
             user.words_guessed_correctly += 1
             user.seconds_took_to_guess += time_diff
+            user.average_time_to_guess_correctly = round(((user.seconds_took_to_guess + time_diff) / (user.words_guessed_correctly + 1)), 1)
+        user.correct_guess_rate = round(((user.words_guessed_correctly + 1) / (user.all_guesses + 1)) * 100, 1)
         user.all_guesses += 1
         db.session.commit()
 
@@ -511,6 +572,45 @@ def testo():
         my_input = request.form.get('my_input')
         return render_template('test2.html', my_input=my_input)
     return render_template('index.html')
+
+
+@app.route('/profile', methods=['GET', 'POST'])
+def profile():
+    username = session['username']
+    user = get_user_by_username(username)
+    if not user:
+        return render_template('no_guests_allowed.html')
+    wins = user.wins
+    amount_of_correct_guesses = user.words_guessed_correctly
+    seconds_took_to_guess = user.seconds_took_to_guess
+    amount_of_guesses = user.all_guesses
+    amount_of_games = user.all_games
+    games_winrate = user.games_winrate
+    correct_guess_rate = user.correct_guess_rate
+    avg_time_to_guess_correctly = user.average_time_to_guess_correctly
+    #sql = text('SELECT * from user_tbl WHERE user_tbl.book_price > 100')
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.all_games > ' + str(amount_of_games))
+    place_by_games_played = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.wins > ' + str(wins))
+    place_by_games_won = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.all_games >= 5 AND user_tbl.games_winrate > ' + str(games_winrate))
+    place_by_winrate = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.all_guesses > ' + str(amount_of_guesses))
+    place_by_amount_of_guesses = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.words_guessed_correctly > ' + str(amount_of_correct_guesses))
+    place_by_amount_of_correct_guesses = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.all_guesses >= 5 AND user_tbl.correct_guess_rate > ' + str(correct_guess_rate))
+    place_by_correct_guess_rate = db.engine.execute(sql).fetchall()[0][0] + 1
+    sql = text('SELECT COUNT(user_tbl.id) FROM user_tbl WHERE user_tbl.all_guesses >= 5 AND user_tbl.average_time_to_guess_correctly > ' + str(avg_time_to_guess_correctly))
+    place_by_average_seconds_per_correct_guess = db.engine.execute(sql).fetchall()[0][0] + 1
+    return render_template('profile.html', amount_of_games_played=amount_of_games, place_by_games_played=place_by_games_played,
+                           games_won=wins, place_by_games_won=place_by_games_won, games_winrate=games_winrate,
+                           place_by_winrate=place_by_winrate, amount_of_guesses=amount_of_guesses, place_by_amount_of_guesses=place_by_amount_of_guesses,
+                           amount_of_correct_guesses=amount_of_correct_guesses, place_by_amount_of_correct_guesses=place_by_amount_of_correct_guesses,
+                           correct_guess_rate=correct_guess_rate, place_by_correct_guess_rate=place_by_correct_guess_rate,
+                           seconds_took_to_guess=seconds_took_to_guess, seconds_for_correct_guess=avg_time_to_guess_correctly,
+                           place_by_average_seconds_per_correct_guess=place_by_average_seconds_per_correct_guess,
+                           username=username, image=user.image)
 
 
 @app.route('/logout', methods=['GET', 'POST'])

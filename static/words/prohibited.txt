@@ -6,3 +6,4 @@ lobby
 artist
 word
 Guest
+username

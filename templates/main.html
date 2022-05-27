@@ -8,14 +8,55 @@
   <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
 </head>
 <body>
-<div class="greet_div">
-  <div class="info">
-    <p class="greet">Hello {{ session.username }}</p>
-  </div>
-  <figure class="image is-64x64">
-    <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div" src="static/Images/{{image}}.png" alt="Image">
-  </figure>
-</div>
+<div class="hero-head">
+        <header class="navbar is-link">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a >
+                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                    </a>
+                    <div class="navbar-item">
+                        <div class="greet_div">
+                          <div class="info">
+                            <p class="greet">Hello {{ session.username }}</p>
+                          </div>
+                          <figure class="image is-48x48">
+                            <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
+                                 src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                          </figure>
+                        </div>
+                    </div>
+                    <span id="burger" class="navbar-burger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                </div>
+                <div class="navbar-menu" id="nav-links">
+                    <div class="navbar-end">
+                        <a class="navbar-item is-active" href="{{url_for('main_page')}}">
+                            Main
+                        </a>
+                        <a class="navbar-item" href="{{url_for('profile')}}">
+                            Profile
+                        </a>
+                        <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                            Update Account Info
+                        </a>
+                      {% if guest %}
+                        <a class="navbar-item" href="{{url_for('login')}}">
+                            Login
+                        </a>
+                      {% else %}
+                        <a class="navbar-item" href="{{url_for('logout')}}">
+                            Logout
+                        </a>
+                      {% endif %}
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
 
 <!-- Creating a room -->
 <button class="js-modal-trigger" data-target="room_creation_modal">
@@ -197,6 +238,8 @@
     {% endif %}
   {% endif %}
 {% endif %}
+<script src="{{url_for('static', filename='js/helpers.js')}}"></script>
 <script src="{{url_for('static', filename='js/main.js')}}"></script>
+<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

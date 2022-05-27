@@ -1,0 +1,26 @@
+.icon_options {
+    max-width: 30vw;
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    justify-content: center
+}
+
+    .icon_options .icon_figure_container {
+        /*flex: 2 0 25%;*/
+        margin: 5px;
+    }
+
+        .icon_options .icon_figure_container .icon_container {
+            position: relative;
+            text-align: center;
+            color: white;
+            font-weight: 900;
+        }
+
+            .icon_options .icon_figure_container .icon_container .icon_text {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }

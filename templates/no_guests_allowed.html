@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Login to use this feature</title>
 </head>
 <body>
 <div class="hero-head">
@@ -34,7 +34,7 @@
                         <a class="navbar-item" href="{{url_for('main_page')}}">
                             Main
                         </a>
-                        <a class="navbar-item is-active" href="{{url_for('profile')}}">
+                        <a class="navbar-item" href="{{url_for('profile')}}">
                             Profile
                         </a>
                         <a class="navbar-item" href="{{url_for('update_user_info')}}">
@@ -43,17 +43,12 @@
                         <a class="navbar-item" href="{{url_for('login')}}">
                             Login
                         </a>
-                        <a class="navbar-item" href="{{url_for('register')}}">
-                            register
-                        </a>
                     </div>
                 </div>
             </div>
         </header>
     </div>
-    <a href="{{ url_for('login') }}">Login</a>
-<br>
-    <a href="{{ url_for('register') }}">Register</a>
+<h1>Login to use this feature</h1>
 <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

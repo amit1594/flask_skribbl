@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Profile</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
 </head>
 <body>
 <div class="hero-head">
@@ -40,20 +41,32 @@
                         <a class="navbar-item" href="{{url_for('update_user_info')}}">
                             Update Account Info
                         </a>
-                        <a class="navbar-item" href="{{url_for('login')}}">
-                            Login
-                        </a>
-                        <a class="navbar-item" href="{{url_for('register')}}">
-                            register
+                        <a class="navbar-item" href="{{url_for('logout')}}">
+                            Logout
                         </a>
                     </div>
                 </div>
             </div>
         </header>
     </div>
-    <a href="{{ url_for('login') }}">Login</a>
+<h1 class="title is-2 is-spaced">{{username}}</h1>
+
+<p>
+    You played {{amount_of_games_played}} games, placing you {{place_by_games_played}} in games played ladder.<br>
+    Out of them you won {{games_won}}, placing you {{place_by_games_won}} in games won ladder.<br>
+    Therefore you have a {{games_winrate}} winrate, placing you {{place_by_winrate}} in winrates ladder.<br>
+</p>
 <br>
-    <a href="{{ url_for('register') }}">Register</a>
+<p>
+    You guessed {{amount_of_guesses}} times, placing you {{place_by_amount_of_guesses}} in amount of guesses ladder.<br>
+    Out of them you correctly guessed {{amount_of_correct_guesses}}, placing you {{place_by_amount_of_correct_guesses}} in correct guesses ladder.<br>
+    Therefore you have a {{correct_guess_rate}} correct guessing rate, placing you {{place_by_correct_guess_rate}} in correct guess rates ladder.<br>
+    Moreover, it took you {{seconds_took_to_guess}} seconds to get all of your correct guesses, so you have an average of
+    {{seconds_for_correct_guess}} seconds per correct guess, placing you {{place_by_average_seconds_per_correct_guess}} ladder.
+</p>
+
+<br><br><br><br><br>
+<a href="{{url_for('update_user_info')}}">Update your account info</a>
 <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

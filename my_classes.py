@@ -66,18 +66,28 @@ def get_full_image_path(user):
     return "/static/Images/anonymous.png"
 
 
-def player_list_to_dict(player_list, with_scores):
+def player_list_to_dict(player_list, with_scores, with_image=True):
     my_dict = dict()
     for player in player_list:
-        if with_scores:
+        if with_scores and with_image:
             my_dict[player.username] = (player.score, get_full_image_path(player.user))
-        else:
+        elif with_scores:
+            my_dict[player.username] = player.score
+        elif with_image:
             my_dict[player.username] = get_full_image_path(player.user)
     return my_dict
 
 
 def sort_player_dict(dicti):
     sort_lst = sorted(dicti.items(), key=lambda x: x[1][0], reverse=True)
+    sorted_dict = dict()
+    for key,value in sort_lst:
+        sorted_dict[key] = value
+    return sorted_dict
+
+
+def sort_player_dict_without_images(dicti):
+    sort_lst = sorted(dicti.items(), key=lambda x: x[1], reverse=True)
     sorted_dict = dict()
     for key,value in sort_lst:
         sorted_dict[key] = value
@@ -174,7 +184,7 @@ class Turn:
         """ emits the current scoreboard """
         if not self.active:
             return
-        my_dict = sort_player_dict(player_list_to_dict(self.player_list, True))
+        my_dict = sort_player_dict(player_list_to_dict(self.player_list, True, True))
         # print(my_dict)
         self.sock.emit('update_scoreboard', my_dict, room=self.room, namespace='/lobby')
 
@@ -257,20 +267,24 @@ class Turn:
     def new_chat_message(self, username, message):
         """ processes a  chat message"""
         if not self.active or not self.word:
-            return None, None
+            return False, None, None
+        player = self.get_player_object_by_username(username)
+        if not player:  # unrecognized username
+            print("unrecognized username")
+            return True, None, None
         # put in language filter
         prohibited_chars = get_prohibited_chars()
         for c in prohibited_chars:
             if c in message:
-                return None, None
+                self.sock.emit('chat_message', {'username': username, 'message': '', 'type': 'prohibited'},
+                               room=player.sid, namespace='/lobby')
+                return True, None, None
         prohibited_words = get_prohibited_words()
         for word in prohibited_words:
             if word in message:
-                return None, None
-        player = self.get_player_object_by_username(username)
-        if not player:  # unrecognized username
-            print("unrecognized username")
-            return None, None
+                self.sock.emit('chat_message', {'username': username, 'message': '', 'type': 'prohibited'},
+                               room=player.sid, namespace='/lobby')
+                return True, None, None
         json = {'username': username, 'message': message}
         if username in self.guessed.keys() or username == self.artist.username:  # if guessed correctly before
             json['type'] = "guessed_chat"
@@ -278,6 +292,7 @@ class Turn:
                 if tempP.username in self.guessed.keys():
                     self.sock.emit('chat_message', json, room=tempP.sid, namespace='/lobby')
             self.send_to_artist('chat_message', json)
+            return False, None, None
         elif message.upper() == self.word.upper():  # correct guess
             print("Giving guesser points for correct guess")
             points, time_diff = self.add_points_to_player(player)
@@ -286,7 +301,7 @@ class Turn:
             self.reduce_time(self.current_time // 3)
             self.all_guessed = self.did_all_guess()
             self.sock.emit('chat_message', {'username': username, 'type': 'correct'}, room=self.room, namespace='/lobby')
-            return points, time_diff
+            return True, points, time_diff
         else:
             for tempP in self.player_list:
                 if tempP.username == username and self.char_difference(message) == 1:  # almost correct
@@ -295,7 +310,7 @@ class Turn:
                 else:  # every one else sees it as a regular message
                     json['type'] = "regular"
                     self.sock.emit('chat_message', json, room=tempP.sid, namespace='/lobby')
-        return None, None
+        return True, None, None
 
     '''def add_stroke(self, stroke_data, username):
         """ appends stroke data and emits to all to draw the stroke"""
@@ -739,7 +754,7 @@ class Lobby:
         return queue
 
     def get_game_results(self):
-        my_dict = sort_player_dict(player_list_to_dict(self.player_list, True))
+        my_dict = sort_player_dict_without_images(player_list_to_dict(self.player_list, True, False))
         winner = list(my_dict)[0]
         return winner, my_dict
 

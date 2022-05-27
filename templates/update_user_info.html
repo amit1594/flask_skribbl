@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Register</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/update_user_info.css')}}">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+</head>
+
+<body>
+<div class="hero-head">
+        <header class="navbar is-link">
+            <div class="container">
+                <div class="navbar-brand">
+                    <a >
+                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                    </a>
+                    <div class="navbar-item">
+                        <div class="greet_div">
+                          <div class="info">
+                            <p class="greet">Hello {{ session.username }}</p>
+                          </div>
+                          <figure class="image is-48x48">
+                            <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
+                                 src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                          </figure>
+                        </div>
+                    </div>
+                    <span id="burger" class="navbar-burger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+                </div>
+                <div class="navbar-menu" id="nav-links">
+                    <div class="navbar-end">
+                        <a class="navbar-item" href="{{url_for('main_page')}}">
+                            Main
+                        </a>
+                        <a class="navbar-item" href="{{url_for('profile')}}">
+                            Profile
+                        </a>
+                        <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                            Update Account Info
+                        </a>
+                        <a class="navbar-item" href="{{url_for('logout')}}">
+                            Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </div>
+
+<!-- icon update modal -->
+<div id="icon_choosing_div" class="modal">
+  <div class="modal-background"></div>
+  <div style="overflow: hidden;" class="modal-content">
+    <div class="container">
+      <div class="columns is-centered">
+          <div class="column is-half">
+            <h1 class="title is-1 has-text-centered has-text-primary">
+              {% if guest %}
+                Login to change icon
+              {% else %}
+                Choose an icon
+              {% endif %}
+            </h1>
+            <div id="icon_options" class="icon_options">
+              {% for icon, text in my_icons.items() %}
+                <div class="icon_figure_container">
+                  <figure class="image is-64x64 child_icon_figure">
+                    <div class="icon_container">
+                      {% if text != "" %}
+                      <img src="static/Images/{{icon}}.png" alt="failed to load">
+                        <div class="icon_text">
+                          {{text}}
+                        </div>
+                      {% else %}
+                        <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png" alt="failed to load">
+                      {% endif %}
+                    </div>
+                  </figure>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+      </div>
+    </div>
+  </div>
+  <button class="modal-close is-large" aria-label="close"></button>
+</div>
+
+<!-- actual updates -->
+<section class="hero is-info is-fullheight">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <table>
+                        <tr>
+                            <h1 style="text-align: center; color: #00008B" class="title is-3 is-spaced">Update your info!</h1>
+                        </tr>
+                        <tr>
+                            <form method="POST" action="{{ url_for('update_user_info') }}" onsubmit="return validate_username()">
+                                <!-- username -->
+                                <div class="field">
+                                    <label class="label">Username</label>
+                                    <div class="control has-icons-left has-icons-right">
+                                        <input class="input" type="text" id="uName" name="username" maxlength="15" value="{{username}}"
+                                               placeholder="Username" oninput="validate_username()" required>
+                                        <span class="icon is-small is-left">
+                                          <i class="fas fa-user"></i>
+                                        </span>
+                                        <p id="username_help" class="help has-text-left">
+                                        {% if alert == "char" %}
+                                            Username can not include the character '{{not_allowed}}'
+                                        {% elif alert == "word" %}
+                                            Username can not include the word '{{not_allowed}}'
+                                        {% elif alert == "taken" %}
+                                            Username taken
+                                        {% endif %}
+                                        </p>
+                                    </div>
+                                </div>
+                                <!-- password -->
+                                <div class="field">
+                                    <label class="label">Password</label>
+                                    <p class="control has-icons-left">
+                                        <input class="input" type="password" name="password" maxlength="15"
+                                               placeholder="Password" value="{{password}}" required>
+                                        <span class="icon is-small is-left">
+                      <i class="fas fa-lock"></i>
+                    </span>
+                                    </p>
+                                </div>
+                                <!-- email -->
+                                <div class="field">
+                                    <label class="label">Email</label>
+                                    <p class="control has-icons-left">
+                                        <input class="input" type="email" name="email" placeholder="example@example.com"
+                                               value="{{email}}" required>
+                                        <span class="icon is-small is-left">
+                      <i class="fas fa-envelope"></i>
+                    </span>
+                                    </p>
+                                </div>
+                                <br>
+                                <br>
+                                <!-- submit -->
+                                <div class="container" style="display: flex;justify-content: center;">
+                                    <div class="field">
+                                        <p class="control">
+                                            <button type="submit" class="button is-success">
+                                                Change Info
+                                            </button>
+                                        </p>
+                                    </div>
+                                </div>
+                            </form>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<script type="text/javascript" src="{{url_for('static', filename='js/helpers.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/update_user_info.js')}}"></script>
+<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+</body>
+</html>

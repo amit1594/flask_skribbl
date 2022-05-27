@@ -12,13 +12,17 @@ function emitWordChoice(word) {
     socket.emit( 'artist_chose_word', {chosen_word: word} )
 }
 
-function writeBoardOverlayList(msg, listElem) {
+function writeBoardOverlayList(msg, listElem, ordered) {
     var node;
     var textnode;
+    var place = 1;
     for (var key of Object.keys(msg)) {
         if (key !== "type") {
             node = document.createElement("li");
-            textnode = document.createTextNode(key + ': ' + msg[key]);
+            if (ordered)
+                textnode = document.createTextNode(place + ". " + key + ': ' + msg[key]);
+            else
+                textnode = document.createTextNode(key + ': ' + msg[key]);
             node.appendChild(textnode);
             listElem.appendChild(node);
         }
@@ -128,7 +132,7 @@ socket.on( 'game_overlay', function(msg) {
         gameCanvasStyle.opacity = "0.2";
         boardOverlayStyle.display = "block";
         boardOverlayTitle.innerText = "Turn ended";
-        writeBoardOverlayList(msg, boardOverlaylist);
+        writeBoardOverlayList(msg, boardOverlaylist, false);
         restore_array = []; ///!!!
         curr_stroke = {}; ///!!!
         pixels_x = [];
@@ -145,7 +149,7 @@ socket.on( 'game_overlay', function(msg) {
         gameCanvasStyle.opacity = "0.2";
         boardOverlayStyle.display = "block";
         boardOverlayTitle.innerText = "Game finished";
-        writeBoardOverlayList(msg, boardOverlaylist);
+        writeBoardOverlayList(msg, boardOverlaylist, true);
         console.log("game ended")
     }
     else if (eType === "lobby") {  // show lobby settings and players
@@ -367,6 +371,10 @@ function chat_handler(msg) {
     var myP = document.createElement("p");
     if (typeof msg.type === 'undefined') {
         return}
+    else if (msg.type === "prohibited") {
+        myP.innerText = 'Message was blocked and not set because it had prohibited text.';
+        myP.style.color = 'red';
+    }
     else if (msg.type === "regular") {
         myP.innerText = msg.username + ": " + msg.message;
         myP.style.color = 'black';
