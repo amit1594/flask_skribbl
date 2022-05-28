@@ -1,6 +1,6 @@
 import eventlet
 import random
-from player import Player
+from classes.player import Player
 eventlet.monkey_patch()
 color_dict = {"black": [0, 0, 0], "dimgray": [105, 105, 105], "purple": [128, 0, 128], "red": [255, 0, 0],
               "blue": [0, 0, 255], "green": [0, 128, 0], "orange": [255, 165, 0], "white": [255, 255, 255],
@@ -9,10 +9,12 @@ color_dict = {"black": [0, 0, 0], "dimgray": [105, 105, 105], "purple": [128, 0,
 
 
 def validate_color(color_name):
+    """ ensures the color_name exists in the color dict """
     return color_name in list(color_dict.keys())
 
 
 def validate_width(width):
+    """ Validates the the width is an int within 1 and 10 """
     try:
         w = int(width)
         return 1 <= w <= 10
@@ -21,6 +23,7 @@ def validate_width(width):
 
 
 def get_prohibited_words():
+    """ Returns all words that are prohibited """
     lst = []
     with open('static/words/prohibited.txt', 'r') as f:
         lines = f.readlines()
@@ -34,18 +37,19 @@ def get_prohibited_words():
 
 
 def get_prohibited_chars():
+    """ Returns all chars that are prohibited """
     return ["<", ">", ":", "\"", "{", "}"]
 
 
 def get_color_by_name(color_name):
+    """ Returns the rgb value of the color """
     c = color_dict.get(color_name, [0, 0, 0])
     cJson = {'r': c[0], 'g': c[1], 'b': c[2]}
-    print("sending color:", cJson)
     return cJson
 
 
 def getRandomNumbers(cap, amount):
-    """ returns a list with 'amount' random different numbers between 0 and cap (including)"""
+    """ Returns a list with 'amount' random different numbers between 0 and cap (including)"""
     available = list(range(cap + 1))  # from 0 to cap
     # print(available)
     my_nums = []
@@ -58,12 +62,14 @@ def getRandomNumbers(cap, amount):
 
 
 def get_full_image_path(user):
+    """ Returns the path of an image. Note: all images are saved via png """
     if user:
         return "/static/Images/" + user.image + ".png"
     return "/static/Images/anonymous.png"
 
 
 def player_list_to_dict(player_list, with_scores, with_image=True):
+    """ returns a dict of players according to the given parameters """
     my_dict = dict()
     for player in player_list:
         if with_scores and with_image:
@@ -76,6 +82,7 @@ def player_list_to_dict(player_list, with_scores, with_image=True):
 
 
 def sort_player_dict(dicti):
+    """ sorts the dict based on points """
     sort_lst = sorted(dicti.items(), key=lambda x: x[1][0], reverse=True)
     sorted_dict = dict()
     for key,value in sort_lst:
@@ -84,8 +91,22 @@ def sort_player_dict(dicti):
 
 
 def sort_player_dict_without_images(dicti):
+    """ sorts the dict based on points """
     sort_lst = sorted(dicti.items(), key=lambda x: x[1], reverse=True)
     sorted_dict = dict()
     for key,value in sort_lst:
         sorted_dict[key] = value
     return sorted_dict
+
+
+def is_valid_text(my_string):
+    """ Returns True if the given string does not contain any prohibited chars or words, else False """
+    proh_chars = get_prohibited_chars()
+    for c in proh_chars:
+        if c in my_string:
+            return False
+    proh_words = get_prohibited_words()
+    for word in proh_words:
+        if word in my_string:
+            return False
+    return True

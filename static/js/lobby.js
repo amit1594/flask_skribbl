@@ -1,20 +1,20 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + "/lobby");
 let pixels_x = [], pixels_y = [];
 let curr_stroke = {};
-var restore_array = []
 
 socket.on( 'connect', function() {
-    console.log("Room: " + room)
-    socket.emit( 'player_join')
+    console.log("Room: " + room);
+    socket.emit( 'player_join');
 })
 
 function emitWordChoice(word) {
-    socket.emit( 'artist_chose_word', {chosen_word: word} )
+    // emitting the chosen word
+    socket.emit( 'artist_chose_word', {chosen_word: word} );
 }
 
 function writeBoardOverlayList(msg, listElem, ordered) {
-    var node;
-    var textnode;
+    // writes the given dict as a list on the overlay
+    var node, textnode;
     var place = 1;
     for (var key of Object.keys(msg)) {
         if (key !== "type") {
@@ -30,58 +30,56 @@ function writeBoardOverlayList(msg, listElem, ordered) {
 }
 
 function displayWordChoicesButtons(flag) {
+    // displays or hides the word choices buttons
     document.getElementById("WordChoicesButtonDiv").style.display = flag;
 }
 
 function isHebrew(num) {
-   return (1488 <= num && num <= 1514)
+   // returns true if the ascii val is within the hebrew range
+   return (1488 <= num && num <= 1514);
 }
 
 function asciiArrayToString(arr) {
-    str = "\u202A"
+    // turns an ascii array into a string, while fixing ltr and rtl
+    str = "\u202A";
     for (var i = 0; i < arr.length; i++) {
        if (isHebrew(arr[i])) {
-           str += String.fromCharCode(arr[i])
+           str += String.fromCharCode(arr[i]);
         }
         else {
-            str += "\u202A" + String.fromCharCode(arr[i]) + "\u202C"
+            str += "\u202A" + String.fromCharCode(arr[i]) + "\u202C";
         }
-        //console.log(str)
     }
-    // str += "\u202C"
-    return str
+    return str;
 }
 
 socket.on( 'game_overlay', function(msg) {
-    //console.log("Game overlay event: " + msg.type)
+    // displays the appropriate overlay
     displayWordChoicesButtons("None");
     removeCanvasListeners();
     var eType = msg.type;
-    console.log(eType);
-    var gameScreenStyle = document.getElementById("GameScreen").style
-    var gameCanvasStyle = document.getElementById("gameCanvas").style
-    var boardOverlayStyle = document.getElementById("boardOverlay").style
-    var lobbyScreenStyle = document.getElementById("LobbyScreen").style
-    var boardOverlayTitle = document.getElementById("overlay_title")
-    var boardOverlaylist = document.getElementById("overlayList")
+    var gameScreenStyle = document.getElementById("GameScreen").style;
+    var gameCanvasStyle = document.getElementById("gameCanvas").style;
+    var boardOverlayStyle = document.getElementById("boardOverlay").style;
+    var lobbyScreenStyle = document.getElementById("LobbyScreen").style;
+    var boardOverlayTitle = document.getElementById("overlay_title");
+    var boardOverlaylist = document.getElementById("overlayList");
     var gameHeader = document.getElementById("gameHeader");
     var bDiv = document.getElementById("WordChoicesButtonDiv");
     var toolbarDivStyle = document.getElementById("containerToolbar").style;
     var hintBtnDivStyle = document.getElementById("hintButtonContainer").style;
     boardOverlaylist.innerHTML = "";
-    //gameCanvasStyle.zIndex = 1;
     toolbarDivStyle.display = "none";
     hintBtnDivStyle.display = "none";
     gameScreenStyle.display = "flex";
     gameCanvasStyle.opacity = "1";
     lobbyScreenStyle.display = "none";
-    red_border(document.getElementById("pen_button"));
     if (eType === "guessing_view") {  // closing overlay
         gameCanvasStyle.display = "block";
         boardOverlayStyle.display = "none";
         context.fillStyle = "white";
-        document.getElementById("wordSpace").innerText = "current word:  " + asciiArrayToString(msg["encoded_word"])
-        document.getElementById("timeLeft").innerText = msg["time"]
+        document.getElementById("wordSpace").innerText = "current word:  " + asciiArrayToString(msg["encoded_word"]);
+        document.getElementById("timeLeft").innerText = msg["time"];
         if (msg["need_hint_box"]) {
             hintBtnDivStyle.display = "Block";
         }
@@ -96,7 +94,6 @@ socket.on( 'game_overlay', function(msg) {
         toolbarDivStyle.display = "flex";
     }
     else if (eType === "word_to_choose_from") {
-        //gameCanvasStyle.zIndex = -1;
         toolbarDivStyle.display = "flex";
         context.fillRect(0, 0, canvas.width, canvas.height);
         gameCanvasStyle.opacity = "0.2";
@@ -133,11 +130,12 @@ socket.on( 'game_overlay', function(msg) {
         boardOverlayStyle.display = "block";
         boardOverlayTitle.innerText = "Turn ended";
         writeBoardOverlayList(msg, boardOverlaylist, false);
-        restore_array = []; ///!!!
-        curr_stroke = {}; ///!!!
+        // resetting the current stroke:
+        curr_stroke = {};
         pixels_x = [];
-        pixels_y = [];   ///!!!!
-    } else if (eType === "new_round") {
+        pixels_y = [];
+        red_border(document.getElementById("pen_button"));
+    } else if (eType === "new_round") {  // plain new round overlay
         gameCanvasStyle.display = "block";
         gameCanvasStyle.opacity = "0.2";
         boardOverlayStyle.display = "block";
@@ -162,9 +160,8 @@ socket.on( 'game_overlay', function(msg) {
 })
 
 socket.on( 'update_player_list', function(msg) {
+    // updating the player list on the lobby overlay
     document.getElementById('lobby_player_list').innerHTML = "";
-    //console.log("Updating Playerlist: ")
-    //console.log(msg)
     var p, div, img;
     for (var key of Object.keys(msg)) {
         p = document.createElement("p");
@@ -182,51 +179,42 @@ socket.on( 'update_player_list', function(msg) {
 })
 
 function create_score_div_html(place, name, points, img) {
-    my_str = "<div class=\"player\" id=\"player" + place + "\">"
-	my_str += "<div class=\"rank\">#" + place + "</div>"
-	my_str += "<div class=\"info\">"
-	my_str += "<p class=\"name\">" + name + "</p>"
-	my_str += "<p class=\"score\">Points: " + points + "</p></div>"
-	my_str += "<div class=\"player_icon\">"
+    // creates the div for a player in the scoreboard
+    my_str = "<div class=\"player\" id=\"player" + place + "\">";
+	my_str += "<div class=\"rank\">#" + place + "</div>";
+	my_str += "<div class=\"info\">";
+	my_str += "<p class=\"name\">" + name + "</p>";
+	my_str += "<p class=\"score\">Points: " + points + "</p></div>";
+	my_str += "<div class=\"player_icon\">";
 	my_str += "<img class=\"player_icon\" src=\"" + img + "\" alt=\"icon\">";
     my_str += "</div>";
     return my_str;
 }
 
-
 socket.on( 'update_scoreboard', function(msg) {
+    // updates  the scoreboard
     var playerCount = 0;
     document.getElementById("scoreboardTblBody").innerHTML = "";
     var scoreboardTblBody = document.getElementById("scoreboardTblBody");
     var width = document.getElementById("containerPlayerList").getBoundingClientRect().width;
-    //console.log("Updating Scoreboard: ")
-    //console.log(msg)
     for (var key of Object.keys(msg)) {
-        playerCount += 1
-        //scoreboardTblBody.innerHTML += "<tr><td><div class=\"card\" style=\"width: " + width + "px;color: black;\"><div class=\"card-content\"><div class=\"media\"><div class=\"media-left\"><figure class=\"image is-48x48\"><img src=\"static\\Images\\penguin.png\" alt=\"Placeholder image\"></figure></div><div class=\"media-content\"><p class=\"is-4\">" + key+ "</p><p class=\"is-6\">Points: " + msg[key][0] + "</p></div></div></div></div></td></tr>"
-        /*
-        document.getElementById("scoreboardTblBody").innerHTML += "<div class=\"columns is-mobile is-centered is-vcentered\">"
-        document.getElementById("scoreboardTblBody").innerHTML += "<div class=\"column\"><img src=\"static\\Images\\penguin.png\">"
-        document.getElementById("scoreboardTblBody").innerHTML += "</div><div class=\"column\">"
-        document.getElementById("scoreboardTblBody").innerHTML += "<span class=\"subtitle\">" + playerCount + ". " + key + ': ' + msg[key][0] + "</span>"
-        document.getElementById("scoreboardTblBody").innerHTML += "</div></div></td></tr>"*/
-        //document.getElementById("scoreboardTblBody").innerHTML += "<img src=\"static\\Images\\penguin.png\">"
-        //document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + playerCount + ". " + key + ': ' + msg[key][0]  +"</td></tr>"
-        document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1])  + "</td></tr>"
+        playerCount += 1;
+        document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1])  + "</td></tr>";
     }
 })
 
-socket.on( 'allowed_to_start', function(msg) {  // only admins get this
-    //console.log("allowed_to_start event sent:" + msg.flag)
+socket.on( 'allowed_to_start', function(msg) {
+    // if allowed, will enable the startButton. Note: only admins get this event
     if (msg.flag === "true")
         document.getElementById('startButton').disabled = false;
     else
         document.getElementById('startButton').disabled = true;
 })
 
-socket.on( 'admin_update', function(msg) {  // only admins get this
+socket.on( 'admin_update', function(msg) {
+    // if received, it means this player became admin, enabling to change the settings. Note: only admins get this event
     if (uName === msg.admin) {
-        console.log("You are the admin!")
+        console.log("You are the admin!");
         document.getElementById('Rounds').disabled = false;
         document.getElementById('DrawTime').disabled = false;
         document.getElementById('Languages').disabled = false;
@@ -237,13 +225,8 @@ socket.on( 'admin_update', function(msg) {  // only admins get this
     }
 })
 
-socket.on( 'game_started', function() {
-    //console.log("Game started!");
-    showGame();
-})
-
 function requestUpdateSettings() {
-    //console.log("Updating settings")
+    // requesting to change current settings to the new ones
     socket.emit( 'update_lobby_settings', {
         rounds : document.getElementById("Rounds").value,
         draw_time : document.getElementById("DrawTime").value,
@@ -256,11 +239,12 @@ function requestUpdateSettings() {
 }
 
 function startGame() {
-    //console.log("Requesting game start")
+    // emitting a request_game_start event
     socket.emit( 'request_game_start')
 }
 
 function getIndexOfSelect(elem, value) {
+    // returning the index of the searched value inside a list
     for (i = 0; i < elem.length; i++) {
         if (elem.options[i].text === "" + value)
             return i;
@@ -269,15 +253,14 @@ function getIndexOfSelect(elem, value) {
 }
 
 socket.on( 'settings_update', function(msg) {
-    //console.log("settings changed");
-    //console.log(msg)
-    document.getElementById("Rounds").selectedIndex = getIndexOfSelect(document.getElementById("Rounds"), msg["rounds"])
-    document.getElementById("DrawTime").selectedIndex = getIndexOfSelect(document.getElementById("DrawTime"), msg["draw_time"])
-    document.getElementById("Languages").selectedIndex = getIndexOfSelect(document.getElementById("Languages"), msg["language"])
-    document.getElementById("Gamemode").selectedIndex = getIndexOfSelect(document.getElementById("Gamemode"), msg["gamemode"])
-    document.getElementById("Difficulty").selectedIndex = getIndexOfSelect(document.getElementById("Difficulty"), msg["difficulty"])
-    document.getElementById("pointsLimit").selectedIndex = getIndexOfSelect(document.getElementById("pointsLimit"), msg["points_limit"])
-    document.getElementById("customWords").value = msg["custom_words"]
+    // updates the settings (meaning only updating how a client sees them)
+    document.getElementById("Rounds").selectedIndex = getIndexOfSelect(document.getElementById("Rounds"), msg["rounds"]);
+    document.getElementById("DrawTime").selectedIndex = getIndexOfSelect(document.getElementById("DrawTime"), msg["draw_time"]);
+    document.getElementById("Languages").selectedIndex = getIndexOfSelect(document.getElementById("Languages"), msg["language"]);
+    document.getElementById("Gamemode").selectedIndex = getIndexOfSelect(document.getElementById("Gamemode"), msg["gamemode"]);
+    document.getElementById("Difficulty").selectedIndex = getIndexOfSelect(document.getElementById("Difficulty"), msg["difficulty"]);
+    document.getElementById("pointsLimit").selectedIndex = getIndexOfSelect(document.getElementById("pointsLimit"), msg["points_limit"]);
+    document.getElementById("customWords").value = msg["custom_words"];
     if (msg['gamemode'] == "Points Rush") {
         document.getElementById("pLimitDiv").style.display = "block";
         document.getElementById("roundsDiv").style.display = "none";
@@ -288,12 +271,13 @@ socket.on( 'settings_update', function(msg) {
 })
 
 function getRGBFromColor(c) {
+    // returns the rgb string of a color
     return `rgb(${draw_color.r}, ${draw_color.g}, ${draw_color.b})`;
 }
 
 function sendMessage() {
+    // sending the client's message to the server
     var msg = document.getElementById("guess_input").value;
-    //console.log("New msg: " + msg)
     if (msg.length > 0){
         socket.emit( 'new_chat_message', {
             message : msg
@@ -303,6 +287,7 @@ function sendMessage() {
 }
 
 function start(msg) {
+    // start a stroke
     if (action != "pen")
         return;
     is_drawing = true;
@@ -313,8 +298,8 @@ function start(msg) {
 }
 
 function draw(msg) {
+    // draw by the given data
     if (is_drawing) {
-        wasChanged = true;
         context.lineTo(msg.clickX, msg.clickY);
         //context.strokeStyle = msg.draw_color;
         console.log(draw_color)
@@ -329,6 +314,7 @@ function draw(msg) {
 }
 
 function stop(msg) {
+    // stop a stroke
     if (is_drawing) {
         context.stroke();
         context.closePath();
@@ -337,40 +323,31 @@ function stop(msg) {
 }
 
 function clear_canvas() {
+    // sets the entire canvas white
     context.fillStyle = "white";
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.fillRect(0, 0, canvas.width, canvas.height);
     context.strokeStyle = getRGBFromColor(draw_color);
 }
 
-function stroke_handler(msg) {
-    if (typeof msg.op === 'undefined') {return}
-    else if (msg.op === "start") {start(msg)}
-    else if (msg.op === "draw") {draw(msg)}
-    else if (msg.op === "stop") {stop()}
-    else if (msg.op == "clear") {clear_canvas()}
-}
+// CHAT HANDLING:
 
-socket.on( 'draw_stroke', function( msg ) {
-    //console.log(msg)
-    stroke_handler(msg)
-})
-
-// setup chat
+// instead of sending the form, sending the message to the server
 document.getElementById("chatForm").addEventListener("submit", function(event) {
     event.preventDefault();
     var iChat = document.getElementById("inputChat");
     if (iChat.value.length > 0) {
-        socket.emit( 'new_chat_message', {message: iChat.value} )
+        socket.emit( 'new_chat_message', {message: iChat.value} );
         iChat.value = "";
     }
 });
 
 function chat_handler(msg) {
+    // updates the chat according to the given data
     var mDiv = document.getElementById("messages");
     var myP = document.createElement("p");
     if (typeof msg.type === 'undefined') {
-        return}
+        return;}
     else if (msg.type === "prohibited") {
         myP.innerText = 'Message was blocked and not set because it had prohibited text.';
         myP.style.color = 'red';
@@ -425,51 +402,31 @@ function chat_handler(msg) {
     mDiv.appendChild(myP);
 }
 
-socket.on( 'chat_message', function( msg ) {
-    console.log(msg)
-    chat_handler(msg)
+socket.on( 'chat_message', function(msg) {
+    chat_handler(msg);
 })
 
-// requesting hint handling
+// HINT HANDLING:
 function requestHint(mode) {
     console.log("requested hint")
     socket.emit( 'request_hint', {type : mode} )
 }
 
 
-// CANVASES SETUP
+// CANVASES SETUP:
 
-//setup color canvas sample
-const canvas_sample = document.getElementById("canvas_sample");
-canvas_sample.style.display = "none";
-canvas_sample.width = 1;
-canvas_sample.height = 1;
-let canvas_sample_context = canvas_sample.getContext("2d");
-canvas_sample_context.fillStyle = "black";
-canvas_sample_context.fillRect(0, 0, canvas_sample.width, canvas_sample.height)
-
-//setup draw canvas sample
-const draw_sample = document.getElementById("draw_sample");
-draw_sample.style.display = "none";
-draw_sample.width = 1;
-draw_sample.height = 1;
-let draw_sample_context = draw_sample.getContext("2d");
-draw_sample_context.fillStyle = "black";
-draw_sample_context.fillRect(0, 0, draw_sample.width, draw_sample.height)
-
-//setup game canvas
+// setup game canvas
 const canvas = document.getElementById("canvas");
 const boardContainer = document.getElementById("containerBoard");
 const baseWidth = 1000;
 const baseHeight = 620;
-canvas.width = boardContainer.clientWidth; //
-canvas.height = boardContainer.clientHeight; //
+canvas.width = boardContainer.clientWidth;
+canvas.height = boardContainer.clientHeight;
 let context = canvas.getContext("2d");
 
 context.fillStyle = "white";
 context.fillRect(0, 0, canvas.width, canvas.height)
 
-let wasChanged = false;
 let start_background_color = "white";
 let draw_color = "black";
 change_color(document.getElementById("black-field"));
@@ -477,9 +434,6 @@ document.getElementById("pen_button").style.border = "2px solid red";
 let draw_width = "2";
 let is_drawing = false;
 let action = "pen";
-let isFilling = false;
-
-let index = -1;
 
 let artistWidthFactor = baseWidth / canvas.clientWidth;
 let artistHeightFactor = baseHeight / canvas.clientHeight;
@@ -487,14 +441,19 @@ let guesserWidthFactor = canvas.clientWidth / baseWidth;
 let guesserHeightFactor = canvas.clientHeight / baseHeight;
 
 function scaleXForServer(val) {
+    // returns the float scaled by artist width factor
     return parseFloat((artistWidthFactor * val).toFixed(2));
 }
 
 function scaleYForServer(val) {
+    // returns the float scaled by artist height factor
     return parseFloat((artistHeightFactor * val).toFixed(2));
 }
 
+// CANVAS RESIZING:
+
 function handleCanvasResize() {
+    // handles canvas resizing
     if (canvas.width === boardContainer.clientWidth && canvas.height === boardContainer.clientHeight) {
         return false;
     }
@@ -504,28 +463,22 @@ function handleCanvasResize() {
     artistHeightFactor = baseHeight / canvas.clientHeight;
     guesserWidthFactor = canvas.clientWidth / baseWidth;
     guesserHeightFactor = canvas.clientHeight / baseHeight;
-    //chat.style.maxHeight = drawingBoard.clientHeight + "px";
-    //playerContainer.style.maxHeight = drawingBoard.clientHeight + "px";
     return true;
 }
 
 var doit;
-function requestEntireDrawing() {
-    socket.emit('requestEntireDrawing')
-}
-
 handleCanvasResize();
 
 window.addEventListener("resize", () => {
             if (handleCanvasResize()) {
                 clearTimeout(doit);
                 doit = setTimeout(function() {
-                    requestEntireDrawing();
+                    socket.emit('requestEntireDrawing');
                 }, 75);
             }
         }, false);
 
-//canvas events
+// SETUP CANVAS LISTENERS
 function addCanvasListeners() {
     canvas.addEventListener("touchstart", sendStart, false);
     canvas.addEventListener("touchmove", sendDraw, false);
@@ -546,8 +499,6 @@ canvas.addEventListener("touchstart", sendStart, false);
     canvas.removeEventListener("mouseout", sendStop, false);
 }
 
-var canvasPos = canvas.getBoundingClientRect();
-
 function request_color_change(color) {
     socket.emit( 'client_instruction', {inst_type: 'change_color', color: color});
 }
@@ -561,19 +512,17 @@ function request_action_change(new_action) {
 }
 
 function change_color(element) {
+    // request a color change
     request_color_change(element.style.background);
     var allEle = document.getElementsByClassName("color-field");
     for (var i = 0; i < allEle.length; i++) {
         allEle[i].style.opacity = 0.6;
-        //allEle[i].style.width = "40px";
-        //allEle[i].style.height = "40px";
     }
-    //element.style.width = "50px";
-    //element.style.height = "50px";
     element.style.opacity = 1;
 }
 
 function red_border(element) {
+    // red boreders the given element
     var allEle = document.getElementsByTagName("button")
     for (var i = 0; i < allEle.length; i++) {
         allEle[i].style.border = "2px solid white";
@@ -582,38 +531,39 @@ function red_border(element) {
 }
 
 function getFixedCordX(eventX) {
+    // returns the fixed position of the mouse's X according to the canvas
     var relative = eventX - canvas.getBoundingClientRect().left
-    var resizing = document.getElementById("canvas").width / document.getElementById("containerBoard").clientWidth
+    var resizing = document.getElementById("canvas").width / document.getElementById("containerBoard").clientWidth;
     return Math.round(relative * resizing)
 }
 
 function getFixedCordY(eventY) {
+    // returns the fixed position of the mouse's Y according to the canvas
     var relative = eventY - canvas.getBoundingClientRect().top
-    var resizing = document.getElementById("canvas").height / document.getElementById("containerBoard").clientHeight
+    var resizing = document.getElementById("canvas").height / document.getElementById("containerBoard").clientHeight;
     return Math.round(relative * resizing)
 }
 
 function sendStart(e) {
-    console.log("CUrr action is:" + action)
+    // sends instructions
     if (action == "fill") {
         json = {inst_type: 'fill', x: scaleXForServer(getFixedCordX(e.clientX)), y: scaleYForServer(getFixedCordY(e.clientY))}
         socket.emit( 'client_instruction', json);
         return;
     }
-    is_drawing = true
+    is_drawing = true;
     start({clickX : getFixedCordX(e.clientX), clickY : getFixedCordY(e.clientY)})
     pixels_x.push(scaleXForServer(getFixedCordX(e.clientX)));
     pixels_y.push(scaleYForServer(getFixedCordY(e.clientY)));
 }
 
 function sendDraw(e) {
+    // sends instructions
     if (is_drawing) {
-        console.log(e.clientX, e.clientY)
-        draw({clickX : getFixedCordX(e.clientX), clickY : getFixedCordY(e.clientY)} )
+        draw({clickX : getFixedCordX(e.clientX), clickY : getFixedCordY(e.clientY)} );
         if (pixels_x.length > 50) {
             my_json = {inst_type: 'stroke', pixels_x : pixels_x, pixels_y : pixels_y};
             socket.emit( 'client_instruction', my_json);
-            console.log("Sent: \n" + my_json);
             pixels_x = [pixels_x[pixels_x.length - 1]];
             pixels_y = [pixels_y[pixels_y.length - 1]];
         } else {
@@ -624,12 +574,12 @@ function sendDraw(e) {
 }
 
 function sendStop(e) {
+    // sends instructions
     if (is_drawing) {
-        stop({})
+        stop({});
         if (pixels_x.length > 1) {
             my_json = {inst_type: 'stroke', pixels_x : pixels_x, pixels_y : pixels_y}
             socket.emit( 'client_instruction', my_json)
-            console.log("Sent: \n" + my_json)
             pixels_x = []
             pixels_y = []
         }
@@ -637,43 +587,31 @@ function sendStop(e) {
 }
 
 function sendClearCanvas(e) {
-    socket.emit( 'client_instruction', {inst_type: 'clear'} )
+    socket.emit( 'client_instruction', {inst_type: 'clear'} );
 }
 
 function undo_last() {
-    socket.emit( 'client_instruction', {inst_type: 'undo'} )
+    socket.emit( 'client_instruction', {inst_type: 'undo'} );
 }
 
 socket.on( 'new_instruction', function(inst) {
-    console.log("got instruction")
-    console.log(inst)
+    // processes the given instruction
     if (inst.inst_type == "clear") {
         clear_canvas();
         return;
     } else if (inst.inst_type == "fill") {
-        //action = "fill"
         red_border(document.getElementById("fill_button"));
-        console.log("Filling: " + inst.x + "," + inst.y + "," + "[" + draw_color + ", 1]")
         context.fillFlood(guesserWidthFactor * inst.x, guesserHeightFactor * inst.y, draw_color)
         return;
     } else if (inst.inst_type == "change_action") {
-        console.log("action changed")
         action = inst.action;
-        console.log(action);
     } else if (inst.inst_type == "change_width") {
-        console.log("width changed")
         draw_width = inst.width;
-        console.log(draw_width);
     } else if (inst.inst_type == "change_color") {
-        console.log("color changed")
         draw_color = inst.color;
-        draw_sample_context.fillStyle = draw_color;
-        draw_sample_context.fillRect(0, 0, canvas_sample.width, canvas_sample.height);
-        console.log(draw_color);
     } else if (inst.inst_type == "stroke") {
         var my_json;
         start({clickX : guesserWidthFactor * inst.pixels_x[0], clickY : guesserHeightFactor * inst.pixels_y[0]});
-        console.log("drawing");
         for (var i = 0; i < inst.pixels_x.length; i++) {
             my_x = guesserWidthFactor * inst.pixels_x[i];
             my_y = guesserHeightFactor * inst.pixels_y[i];

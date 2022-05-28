@@ -27,13 +27,6 @@ var floodfill = (function() {
 
         var e = i, w = i, me, mw, w2 = width*4;
         var j;
-
-        //Previously we used Array.push and Array.pop here, with which the method
-        //took between 70ms and 80ms on a rather strong machine with a FULL HD monitor.
-        //Since Q can never be required to be bigger than the amount of maximum
-        //pixels (width*height), we preallocate Q with that size. While not all of
-        //the space might be needed, this is cheaper than reallocating multiple times.
-        //This improved the time from 70ms-80ms to 50ms-60ms.
         var Q = new Array(width*height);
         var nextQIndex = 0;
         Q[nextQIndex++] = i;

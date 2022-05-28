@@ -114,6 +114,7 @@
           </div>
           <p style="display: none" id="room_id_help1" class="help is-danger">Enter a room ID</p>
           <p style="display: none" id="room_id_help2" class="help is-danger">Room ID already exists</p>
+          <p style="display: none" id="room_id_help3" class="help is-danger">Prohibited Room ID</p>
         </div>
         <div class="field">
           <label>Room Password</label>
@@ -215,7 +216,11 @@
         var prev_id = "{{prev_id}}";
         var prev_pass = "{{prev_pass}}";
         if (prev_id.length > 0 || prev_pass.length > 0) {
-          document.getElementById("room_id_help2").style.display = "block";
+          {% if type == "exists" %}
+            document.getElementById("room_id_help2").style.display = "block";
+          {% elif type == "prohibited" %}
+            document.getElementById("room_id_help3").style.display = "block";
+          {% endif %}
           document.getElementById("room_creation_modal").classList.add('is-active');
           document.getElementById("room_id").value = prev_id;
           document.getElementById("room_password").value = prev_pass;
