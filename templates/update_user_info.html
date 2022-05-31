@@ -15,119 +15,132 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
 </head>
 
-<body>
+<body style="background-color: #3298dc; height: 100vh;">
 <div class="hero-head">
-        <header class="navbar is-link">
-            <div class="container">
-                <div class="navbar-brand">
-                    <a >
-                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
-                    </a>
-                    <div class="navbar-item">
-                        <div class="greet_div">
-                          <div class="info">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
                             <p class="greet">Hello {{ session.username }}</p>
-                          </div>
-                          <figure class="image is-48x48">
+                        </div>
+                        <figure class="image is-48x48">
                             <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
                                  src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
-                          </figure>
-                        </div>
+                        </figure>
                     </div>
-                    <span id="burger" class="navbar-burger">
+                </div>
+                <span id="burger" class="navbar-burger">
                       <span></span>
                       <span></span>
                       <span></span>
                     </span>
-                </div>
-                <div class="navbar-menu" id="nav-links">
-                    <div class="navbar-end">
-                        <a class="navbar-item" href="{{url_for('main_page')}}">
-                            Main
-                        </a>
-                        <a class="navbar-item" href="{{url_for('profile')}}">
-                            Profile
-                        </a>
-                        <a class="navbar-item" href="{{url_for('update_user_info')}}">
-                            Update Account Info
-                        </a>
-                        <a class="navbar-item" href="{{url_for('logout')}}">
-                            Logout
-                        </a>
-                    </div>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('profile')}}">
+                        Profile
+                    </a>
+                    <a class="navbar-item is-active" href="{{url_for('update_user_info')}}">
+                        Update Account Info
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('logout')}}">
+                        Logout
+                    </a>
                 </div>
             </div>
-        </header>
-    </div>
+        </div>
+    </header>
+</div>
 
 <!-- icon update modal -->
 <div id="icon_choosing_div" class="modal">
-  <div class="modal-background"></div>
-  <div style="overflow: hidden;" class="modal-content">
-    <div class="container">
-      <div class="columns is-centered">
-          <div class="column is-half">
-            <h1 class="title is-1 has-text-centered has-text-primary">
-              {% if guest %}
-                Login to change icon
-              {% else %}
-                Choose an icon
-              {% endif %}
-            </h1>
-            <div id="icon_options" class="icon_options">
-              {% for icon, text in my_icons.items() %}
-                <div class="icon_figure_container">
-                  <figure class="image is-64x64 child_icon_figure">
-                    <div class="icon_container">
-                      {% if text != "" %}
-                      <img src="static/Images/{{icon}}.png" alt="failed to load">
-                        <div class="icon_text">
-                          {{text}}
+    <div class="modal-background"></div>
+    <div style="overflow: hidden;" class="modal-content">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <h1 class="title is-1 has-text-centered has-text-primary">
+                        {% if guest %}
+                        Login to change icon
+                        {% else %}
+                        Choose an icon
+                        {% endif %}
+                    </h1>
+                    <div id="icon_options" class="icon_options">
+                        {% for icon, text in my_icons.items() %}
+                        <div class="icon_figure_container">
+                            <figure class="image is-64x64 child_icon_figure">
+                                <div class="icon_container">
+                                    {% if text != "" %}
+                                    <img src="static/Images/{{icon}}.png" alt="failed to load">
+                                    <div class="icon_text">
+                                        {{text}}
+                                    </div>
+                                    {% else %}
+                                    <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png"
+                                         alt="failed to load">
+                                    {% endif %}
+                                </div>
+                            </figure>
                         </div>
-                      {% else %}
-                        <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png" alt="failed to load">
-                      {% endif %}
+                        {% endfor %}
                     </div>
-                  </figure>
                 </div>
-              {% endfor %}
             </div>
-          </div>
-      </div>
+        </div>
     </div>
-  </div>
-  <button class="modal-close is-large" aria-label="close"></button>
+    <button class="modal-close is-large" aria-label="close"></button>
 </div>
-
-<!-- actual updates -->
-<section class="hero is-info is-fullheight">
+<!-- title -->
+<section class="hero is-info">
     <div class="hero-body">
+        <div class="has-text-centered">
+            <h1 class="title is-1" style="color: black">Update your info</h1>
+        </div>
+    </div>
+</section>
+<!-- actual updates -->
+<section class="hero is-info">
+    <div class="hero-body" style="display: block;">
         <div class="container">
             <div class="columns is-centered">
                 <div class="column is-half">
                     <table>
                         <tr>
-                            <h1 style="text-align: center; color: #00008B" class="title is-3 is-spaced">Update your info!</h1>
-                        </tr>
-                        <tr>
-                            <form method="POST" action="{{ url_for('update_user_info') }}" onsubmit="return encrypt_pass()">
+                            <form method="POST" action="{{ url_for('update_user_info') }}"
+                                  onsubmit="return encrypt_pass()">
                                 <!-- username -->
                                 <div class="field">
                                     <label class="label">Username</label>
                                     <div class="control has-icons-left has-icons-right">
-                                        <input class="input" type="text" id="uName" name="username" maxlength="15" value="{{username}}"
+                                        <input class="input" type="text" id="uName" name="username" maxlength="15"
+                                               value="{{username}}"
                                                placeholder="Username" oninput="validate_username()" required>
                                         <span class="icon is-small is-left">
                                           <i class="fas fa-user"></i>
                                         </span>
                                         <p id="username_help" class="help has-text-left">
-                                        {% if alert == "char" %}
+                                            {% if alert == "char" %}
                                             Username can not include the character '{{not_allowed}}'
-                                        {% elif alert == "word" %}
+                                            {% elif alert == "word" %}
                                             Username can not include the word '{{not_allowed}}'
-                                        {% elif alert == "taken" %}
+                                            {% elif alert == "taken" %}
                                             Username taken
-                                        {% endif %}
+                                            {% endif %}
                                         </p>
                                     </div>
                                 </div>

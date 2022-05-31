@@ -1,218 +1,273 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <title>Flask_Chat_App</title>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
-  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
+    <title>Main Page</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
 </head>
-<body>
+<body style="background-color: #3298dc; height: 100vh;">
 <div class="hero-head">
-        <header class="navbar is-link">
-            <div class="container">
-                <div class="navbar-brand">
-                    <a >
-                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
-                    </a>
-                    <div class="navbar-item">
-                        <div class="greet_div">
-                          <div class="info">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
                             <p class="greet">Hello {{ session.username }}</p>
-                          </div>
-                          <figure class="image is-48x48">
+                        </div>
+                        <figure class="image is-48x48">
                             <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
                                  src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
-                          </figure>
-                        </div>
+                        </figure>
                     </div>
-                    <span id="burger" class="navbar-burger">
+                </div>
+                <span id="burger" class="navbar-burger">
                       <span></span>
                       <span></span>
                       <span></span>
                     </span>
-                </div>
-                <div class="navbar-menu" id="nav-links">
-                    <div class="navbar-end">
-                        <a class="navbar-item is-active" href="{{url_for('main_page')}}">
-                            Main
-                        </a>
-                        <a class="navbar-item" href="{{url_for('profile')}}">
-                            Profile
-                        </a>
-                        <a class="navbar-item" href="{{url_for('update_user_info')}}">
-                            Update Account Info
-                        </a>
-                      {% if guest %}
-                        <a class="navbar-item" href="{{url_for('login')}}">
-                            Login
-                        </a>
-                      {% else %}
-                        <a class="navbar-item" href="{{url_for('logout')}}">
-                            Logout
-                        </a>
-                      {% endif %}
-                    </div>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item is-active" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('profile')}}">
+                        Profile
+                    </a>
+                    <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                        Update Account Info
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    {% if guest %}
+                    <a class="navbar-item" href="{{url_for('login')}}">
+                        Login
+                    </a>
+                    {% else %}
+                    <a class="navbar-item" href="{{url_for('logout')}}">
+                        Logout
+                    </a>
+                    {% endif %}
                 </div>
             </div>
-        </header>
-    </div>
-
-<!-- Creating a room -->
-<button class="js-modal-trigger" data-target="room_creation_modal">
-  Create a room
-</button>
+        </div>
+    </header>
+</div>
 
 <div id="icon_choosing_div" class="modal">
-  <div class="modal-background"></div>
-  <div style="overflow: hidden;" class="modal-content">
-    <div class="container">
-      <div class="columns is-centered">
-          <div class="column is-half">
-            <h1 class="title is-1 has-text-centered has-text-primary">
-              {% if guest %}
-                Login to change icon
-              {% else %}
-                Choose an icon
-              {% endif %}
-            </h1>
-            <div id="icon_options" class="icon_options">
-              {% for icon, text in my_icons.items() %}
-                <div class="icon_figure_container">
-                  <figure class="image is-64x64 child_icon_figure">
-                    <div class="icon_container">
-                      {% if text != "" %}
-                      <img src="static/Images/{{icon}}.png" alt="failed to load">
-                        <div class="icon_text">
-                          {{text}}
+    <div class="modal-background"></div>
+    <div style="overflow: hidden;" class="modal-content">
+        <div class="container">
+            <div class="columns is-centered">
+                <div class="column is-half">
+                    <h1 class="title is-1 has-text-centered has-text-primary">
+                        {% if guest %}
+                        Login to change icon
+                        {% else %}
+                        Choose an icon
+                        {% endif %}
+                    </h1>
+                    <div id="icon_options" class="icon_options">
+                        {% for icon, text in my_icons.items() %}
+                        <div class="icon_figure_container">
+                            <figure class="image is-64x64 child_icon_figure">
+                                <div class="icon_container">
+                                    {% if text != "" %}
+                                    <img src="static/Images/{{icon}}.png" alt="failed to load">
+                                    <div class="icon_text">
+                                        {{text}}
+                                    </div>
+                                    {% else %}
+                                    <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png"
+                                         alt="failed to load">
+                                    {% endif %}
+                                </div>
+                            </figure>
                         </div>
-                      {% else %}
-                        <img onClick="request_icon_change('{{icon}}');" src="static/Images/{{icon}}.png" alt="failed to load">
-                      {% endif %}
+                        {% endfor %}
                     </div>
-                  </figure>
                 </div>
-              {% endfor %}
             </div>
-          </div>
-      </div>
+        </div>
     </div>
-  </div>
-  <button class="modal-close is-large" aria-label="close"></button>
+    <button class="modal-close is-large" aria-label="close"></button>
 </div>
 
-<div id="room_creation_modal" class="modal">
-  <div class="modal-background"></div>
-  <div class="modal-content">
-    <div class="box">
-      <form action="{{ url_for('main_page') }}" onsubmit="return validateForm()" method="POST">
-        <input type="hidden" value="create" name="op">
-        <div class="field">
-          <label>Room ID</label>
-          <div class="control">
-            <input type="text" id='room_id' name='room_id' placeholder="Enter room id" minlength="1"/>
-          </div>
-          <p style="display: none" id="room_id_help1" class="help is-danger">Enter a room ID</p>
-          <p style="display: none" id="room_id_help2" class="help is-danger">Room ID already exists</p>
-          <p style="display: none" id="room_id_help3" class="help is-danger">Prohibited Room ID</p>
-        </div>
-        <div class="field">
-          <label>Room Password</label>
-          <div class="control">
-            <input type="text" id='room_password' name='room_password' placeholder="Leave blank for public "/>
-          </div>
-        </div>
-        <input type="submit"/>
-      </form>
-    </div>
-  </div>
-  <button class="modal-close is-large" aria-label="close"></button>
-</div>
-<br><br><br><br>
-<h4> Active rooms:</h4>
-<form action="{{ url_for('main_page') }}" method="POST">
-  <input type="hidden" value="join" name="op">
-  <input type="hidden" value="" id="room_id_1" name="room_id"/>
-  <table id="rooms_table" class="table is-bordered is-striped is-narrow is-hoverable">
-    <thead>
-    <tr>
-      <td>
-        Room ID
-      </td>
-      <td>
-        Players
-      </td>
-      <td>
-        Started?
-      </td>
-      <td>
-        Private/Public
-      </td>
-    </tr>
-    </thead>
-    <tbody>
-    {% set count = 1 %}
-    {% for room, playerCount, started, requiresPassword in rooms %}
-    <tr>
-      <td>
-        {% if playerCount >= 10 %}
-          <p>{{ room }}</p>
-        {% else %}
-          {% if requiresPassword %}
-          <!-- requires_password -->
-          <div>
-            <button type="button" class="js-modal-trigger" data-target="password_modal_{{room}}">
-              {{ room }}
+<!-- title -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <h1 class="title is-1">Create a lobby:</h1>
+        <div class="content">
+            {% if guest %}
+            <!-- Creating a lobby fake -->
+            <button class="js-modal-trigger" data-target="room_creation_warning_modal">
+                Create a room
             </button>
-            <div id="password_modal_{{room}}" class="modal">
-              <div class="modal-background"></div>
-              <div class="modal-content">
-                <div class="box">
-                  <div class="field">
-                    <label>Room Password</label>
-                    <div class="control">
-                      <input type="text" id='req_room_password_{{room}}' name='room_password' placeholder="Enter Password"/>
+            <div id="room_creation_warning_modal" class="modal">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+                        <div class="content">
+                            Login to create a lobby.
+                        </div>
                     </div>
-                    <p style="display: none" id="password_help_{{room}}" class="help is-danger">Incorrect Password</p>
-                  </div>
-                  <input type="submit" onclick="updateRoomID('{{ room }}')"/>
                 </div>
-              </div>
-              <button type="button" class="modal-close is-large" aria-label="close"></button>
+                <button class="modal-close is-large" aria-label="close"></button>
             </div>
-          </div>
-          {% else %}
-          <div>
-            <input type="submit" value="{{ room }}" onclick="updateRoomID('{{ room }}')"/>
-          </div>
-          {% endif %}
-        {% endif %}
-      </td>
-      <td>
-        {% if playerCount >= 10 %}
-          <p>Full</p>
-        {% else %}
-          {{ playerCount }}
-        {% endif %}
-      </td>
-      <td>{{ started }}</td>
-      <td>
-      {% if requiresPassword %}
-        Private
-      {% else %}
-        Public
-      {% endif %}
-      </td>
-    </tr>
-    {% set count = count + 1 %}
-    {% endfor %}
-    </tbody>
-  </table>
-</form>
+            {% else %}
+            <!-- Creating a lobby -->
+            <button class="js-modal-trigger" data-target="room_creation_modal">
+                Create a room
+            </button>
+            <div id="room_creation_modal" class="modal">
+                <div class="modal-background"></div>
+                <div class="modal-content">
+                    <div class="box">
+                        <form action="{{ url_for('main_page') }}" onsubmit="return validateForm()" method="POST">
+                            <input type="hidden" value="create" name="op">
+                            <div class="field">
+                                <label>Room ID</label>
+                                <div class="control">
+                                    <input type="text" id='room_id' name='room_id' placeholder="Enter room id"
+                                           minlength="1"/>
+                                </div>
+                                <p style="display: none" id="room_id_help1" class="help is-danger">Enter a room ID</p>
+                                <p style="display: none" id="room_id_help2" class="help is-danger">Room ID already
+                                    exists</p>
+                                <p style="display: none" id="room_id_help3" class="help is-danger">Prohibited Room
+                                    ID</p>
+                            </div>
+                            <div class="field">
+                                <label>Room Password</label>
+                                <div class="control">
+                                    <input type="text" id='room_password' name='room_password'
+                                           placeholder="Leave blank for public "/>
+                                </div>
+                            </div>
+                            <input type="submit"/>
+                        </form>
+                    </div>
+                </div>
+                <button class="modal-close is-large" aria-label="close"></button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<br><br><br><br>
+
+<!-- title -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <h1 class="title is-1">Join a lobby:</h1>
+        <div class="content has-text-centered">
+            <form action="{{ url_for('main_page') }}" method="POST">
+                <input type="hidden" value="join" name="op">
+                <input type="hidden" value="" id="room_id_1" name="room_id"/>
+                {% if display == "table" %}
+                {% set msg_display = "none" %}
+                {% else %}
+                {% set msg_display = "block" %}
+                {% endif %}
+                <p id="no_lobbies" style="display: {{msg_display}};">No lobbies are currently open.</p>
+                <table id="rooms_table" class="table is-bordered is-striped is-narrow" style="display: {{display}}">
+                    <thead style="background-color: #5F9EA0">
+                    <tr>
+                        <td style="text-align: center;">
+                            Room ID
+                        </td>
+                        <td style="text-align: center;">
+                            Players
+                        </td>
+                        <td style="text-align: center;">
+                            Started?
+                        </td>
+                        <td style="text-align: center;">
+                            Private/Public
+                        </td>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% set count = 1 %}
+                    {% for room, playerCount, started, requiresPassword in rooms %}
+                    <tr>
+                        <td style="text-align: center;">
+                            {% if playerCount >= 10 %}
+                            <p>{{ room }}</p>
+                            {% else %}
+                            {% if requiresPassword %}
+                            <!-- requires_password -->
+                            <div>
+                                <button type="button" class="js-modal-trigger" data-target="password_modal_{{room}}">
+                                    {{ room }}
+                                </button>
+                                <div id="password_modal_{{room}}" class="modal">
+                                    <div class="modal-background"></div>
+                                    <div class="modal-content">
+                                        <div class="box">
+                                            <div class="field">
+                                                <label>Room Password</label>
+                                                <div class="control">
+                                                    <input type="text" id='req_room_password_{{room}}'
+                                                           name='room_password'
+                                                           placeholder="Enter Password"/>
+                                                </div>
+                                                <p style="display: none" id="password_help_{{room}}"
+                                                   class="help is-danger">
+                                                    Incorrect Password</p>
+                                            </div>
+                                            <input type="submit" onclick="updateRoomID('{{ room }}')"/>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="modal-close is-large" aria-label="close"></button>
+                                </div>
+                            </div>
+                            {% else %}
+                            <div>
+                                <input type="submit" value="{{ room }}" onclick="updateRoomID('{{ room }}')"/>
+                            </div>
+                            {% endif %}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">
+                            {% if playerCount >= 10 %}
+                            <p>Full</p>
+                            {% else %}
+                            {{ playerCount }}
+                            {% endif %}
+                        </td>
+                        <td style="text-align: center;">{{ started }}</td>
+                        <td style="text-align: center;">
+                            {% if requiresPassword %}
+                            Private
+                            {% else %}
+                            Public
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% set count = count + 1 %}
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </form>
+        </div>
+    </div>
+</section>
 {% if alert == "create" %}
-  {% if prev_id is not none %}
-    {% if prev_pass is not none %}
-      <script>
+{% if prev_id is not none %}
+{% if prev_pass is not none %}
+<script>
         var prev_id = "{{prev_id}}";
         var prev_pass = "{{prev_pass}}";
         if (prev_id.length > 0 || prev_pass.length > 0) {
@@ -225,13 +280,15 @@
           document.getElementById("room_id").value = prev_id;
           document.getElementById("room_password").value = prev_pass;
         }
-      </script>
-    {% endif %}
-  {% endif %}
+
+
+</script>
+{% endif %}
+{% endif %}
 {% elif alert == "join" %}
-  {% if prev_id is not none %}
-    {% if prev_pass is not none %}
-      <script>
+{% if prev_id is not none %}
+{% if prev_pass is not none %}
+<script>
         var prev_id = "{{prev_id}}";
         var prev_pass = "{{prev_pass}}";
         if (prev_id.length > 0 || prev_pass.length > 0) {
@@ -239,9 +296,11 @@
           document.getElementById("password_modal_{{prev_id}}").classList.add('is-active');
           document.getElementById("req_room_password_{{prev_id}}").value = prev_pass;
         }
-      </script>
-    {% endif %}
-  {% endif %}
+
+
+</script>
+{% endif %}
+{% endif %}
 {% endif %}
 <script src="{{url_for('static', filename='js/helpers.js')}}"></script>
 <script src="{{url_for('static', filename='js/main.js')}}"></script>

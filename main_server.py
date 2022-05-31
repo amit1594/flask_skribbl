@@ -6,14 +6,12 @@ from sqlalchemy import text
 import logging
 from classes.lobby_handler import LobbyHandler
 from helpers import get_prohibited_words, get_prohibited_chars, is_valid_text
-from engineio.payload import Payload
 import os
 import eventlet
 
 eventlet.monkey_patch()
 
 # configs
-Payload.max_decode_packets = 200
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'nLzRfxyl8U5JGSh!'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.dirname(os.path.realpath(__file__)) + '\\myDB.db'
@@ -65,18 +63,18 @@ def get_icons_for_user(username):
     all_icons = get_all_icons()
     user = get_user_by_username(username)
     if not user:
-        return all_icons
+        return {'anonymous': ''}
     wins = user.wins
     correct_guesses = user.words_guessed_correctly
     win_restricted, correct_guessess_restricted = get_restricted_icons()
     for icon, wins_needed in win_restricted.items():
         if wins_needed <= wins:
-            all_icons[icon] = ''
+            all_icons[icon] = ''  # removing restriction
         else:
             break
     for icon, guesses_needed in correct_guessess_restricted.items():
         if guesses_needed <= correct_guesses:
-            all_icons[icon] = ''
+            all_icons[icon] = ''  # removing restriction
         else:
             break
     return all_icons
@@ -129,7 +127,7 @@ def get_lobbies():
 
 def validate_change_icon(icon, username, sid, my_namespace):
     """ Validates that the user is allowed to have the given icon """
-    options = get_icons_for_user(username)  # even if the user is a guest, the icon is denied
+    options = get_icons_for_user(username)  # if the user is a guest, the only options is anonymous
     if options.get(icon, 'doesnt exist') == '':
         user = get_user_by_username(username)
         user.image = icon
@@ -137,6 +135,12 @@ def validate_change_icon(icon, username, sid, my_namespace):
         socketio.emit('icon_changed', {'icon': icon}, room=sid, namespace=my_namespace)
     else:
         print('icon denied')
+
+
+def get_user_image(user):
+    if user:
+        return user.image
+    return "anonymous"
 
 
 @app.before_request
@@ -150,22 +154,24 @@ def before_request():
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html', image=get_user_image(get_user_by_username((session['username']))))
 
 
 @app.route('/login', methods=['POST', 'GET'])
 def login():
-    if request.method != 'POST':  # form not submitted
-        return render_template('login.html')
-    session.pop('username', None)
-    username = request.form.get('username')
-    password = request.form.get('password')  # note: is hashed
-    print("Login attempt: {} | {}".format(username, password))
+    username = session["username"]
     user = get_user_by_username(username)
-    if user and user.password == password:
-        session['username'] = username
+    if request.method != 'POST':  # form not submitted
+        return render_template('login.html', image=get_user_image(user))
+    attempted_username = request.form.get('username')
+    password = request.form.get('password')  # note: is hashed
+    print("Login attempt: {} | {}".format(attempted_username, password))
+    is_user = get_user_by_username(attempted_username)
+    if is_user and is_user.password == password:
+        session.pop('username', None)
+        session['username'] = attempted_username
         return redirect(url_for('main_page'))
-    return render_template('login.html', cred_error="Credentials incorrect")
+    return render_template('login.html', cred_error="Credentials incorrect", image=get_user_image(user))
 
 
 @app.route('/register', methods=['POST', 'GET'])
@@ -184,7 +190,6 @@ def register():
         if word in username:
             return render_template('register.html', alert="word", not_allowed=word, username=username, email=email)
     user = get_user_by_username(username)
-    # do not allow usernames: 'type', 'username', 'word', 'artist', 'Guest + num'
     if user:
         return render_template('register.html', alert="taken", username=username, email=email)
     new_user = UserTbl(username=username, email=email, image="anonymous", password=password,
@@ -201,10 +206,10 @@ def update_user_info():
     username = session['username']
     user = get_user_by_username(username)
     if not user:
-        return render_template('no_guests_allowed.html')
+        return render_template('no_guests_allowed.html', image=get_user_image(user))
     if request.method != 'POST':  # form not submitted
         return render_template('update_user_info.html', username=username, email=user.email,
-                               image=user.image, my_icons=get_icons_for_user(username))
+                               image=get_user_image(user), my_icons=get_icons_for_user(username))
     attempted_username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -213,17 +218,17 @@ def update_user_info():
     for c in prohibited_chars:
         if c in attempted_username:
             return render_template('update_user_info.html', alert="char", not_allowed=c, username=attempted_username, email=email,
-                                   image=user.image, my_icons=get_icons_for_user(username))
+                                   image=get_user_image(user), my_icons=get_icons_for_user(username))
     prohibited_words = get_prohibited_words()
     for word in prohibited_words:
         if word in attempted_username:
             return render_template('update_user_info.html', alert="word", not_allowed=word, username=attempted_username, email=email,
-                                   image=user.image, my_icons=get_icons_for_user(username))
+                                   image=get_user_image(user), my_icons=get_icons_for_user(username))
     # if exists:
     existing_user = get_user_by_username(attempted_username)
     if username != attempted_username and existing_user:
         return render_template('update_user_info.html', alert="taken", username=attempted_username, email=email,
-                               image=user.image, my_icons=get_icons_for_user(username))
+                               image=get_user_image(user), my_icons=get_icons_for_user(username))
     # if valid:
     user.username = attempted_username
     user.password = password
@@ -244,40 +249,43 @@ def handle_icon_change_from_update_user_info(json):
 def main_page():
     username = session['username']
     user = get_user_by_username(username)
+    all_lobbies = get_lobbies()
+    display = "table"
+    if len(all_lobbies) == 0:
+        display = "none"
     if request.method == 'POST':  # requesting to join/create a lobby
         op = request.form.get('op')
         room = request.form.get('room_id')
         room_password = request.form.get('room_password')
         if op == "create":  # creating a new room
+            if not user:  # guests are not allowed to create a room
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies,
+                                       image=get_user_image(user), guest=True, display=display)
             if not is_valid_text(room):  # room name prohibited
-                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(),
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies,
                                        prev_id=room, prev_pass=room_password, alert="create", guest=user is None,
-                                       type="prohibited")
+                                       type="prohibited", image=get_user_image(user), display=display)
             if room not in lobby_handler.lobbies:  # if all good
                 create_new_room(room, room_password)
                 session['room'] = room
                 session['room_password'] = room_password
                 return redirect(url_for('lobby'))
             else:  # lobby id already exists
-                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(), prev_id=room,
-                                       prev_pass=room_password, alert="create", guest=user is None, type="exists")
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies, prev_id=room, display=display,
+                                       prev_pass=room_password, alert="create", guest=user is None, type="exists", image=get_user_image(user))
         elif op == "join":  # joining a room
             actual_pass = lobby_handler.get_lobby(room).password
-            # print("Real pass is '{}', got pass '{}'". format(actual_pass, room_password))
             if actual_pass is None or actual_pass == room_password:
                 session['room'] = room
                 session['room_password'] = room_password
                 return redirect(url_for('lobby'))
             else:  # incorrect password
-                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(), prev_id=room,
-                                       prev_pass=room_password, alert="join", guest=user is None)
-    else:  # regular main view
-        if user:
-            return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(),
-                                   image=user.image, guest=False)
-        else:
-            return render_template('main.html', my_icons=get_icons_for_user(username), rooms=get_lobbies(),
-                                   image="anonymous", guest=True)
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies, prev_id=room,
+                                       prev_pass=room_password, alert="join", guest=user is None, image=get_user_image(user),
+                                       display=display)
+    else:  # regular main
+        return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies,
+                               image=get_user_image(user), guest=user is None, display=display)
 
 
 @socketio.on('request_icon_change', namespace='/main_page')
@@ -313,7 +321,7 @@ def lobby():
         return redirect(url_for('main_page'))
 
 
-@socketio.on('requestEntireDrawing', namespace='/lobby')
+@socketio.on('request_entire_drawing', namespace='/lobby')
 def request_entire_drawing():
     room = session['room']
     this_lobby = lobby_handler.get_lobby(room)
@@ -360,7 +368,7 @@ def handle_join():
     players_dict[request.sid] = (username, room)
     # send scoreboard
     if username == this_lobby.admin:
-        socketio.emit('admin_update', {'admin': username}, room=room, namespace='/lobby')
+        socketio.emit('admin_update', {'admin': username}, room=get_admin_sid(this_lobby), namespace='/lobby')
     send_startable(this_lobby)
     get_all_lobbies()
 
@@ -380,7 +388,7 @@ def lobby_disconnect():
         lobby_handler.remove_lobby(room)
         print('closed room {}'.format(room))
     else:  # more left in the lobby
-        socketio.emit('admin_update', {'admin': this_lobby.admin}, room=room, namespace='/lobby')
+        socketio.emit('admin_update', {'admin': this_lobby.admin}, room=get_admin_sid(this_lobby), namespace='/lobby')
         send_startable(this_lobby)
         print("Disconnected {}".format(username))
     leave_room(room)
@@ -404,8 +412,8 @@ def start_game():
                 user.all_games += 1
                 user.games_winrate = round((user.wins / (user.all_games + 1)) * 100, 1)
         db.session.commit()
-        socketio.start_background_task(this_lobby.start_game())  # starting the lobby in a thread
-        get_all_lobbies()
+        socketio.start_background_task(this_lobby.start_game())  # starting the lobby in an async thread
+        get_all_lobbies()  # updates the lobby list in the main_page
         # adding 1 to the iwn counter of the winner
         winner = this_lobby.winner
         if winner:
@@ -425,10 +433,10 @@ def update_lobby_settings(json):
         return
     try:
         if this_lobby.admin == username:  # validating that the admin sent it
-            custom_words = json.get('custom_words').split(",")
-            this_lobby.update_settings(json.get('language'), int(json.get('draw_time')), int(json.get('rounds')),
-                                       json.get('gamemode'), int(json.get('points_limit')), json.get('difficulty'),
-                                       custom_words)
+            custom_words = json.get('custom_words', '').split(",")
+            this_lobby.update_settings(json.get('language', ''), int(json.get('draw_time', 2)), int(json.get('rounds', 6)),
+                                       json.get('gamemode', ''), int(json.get('points_limit', 5000)),
+                                       json.get('difficulty', ''), custom_words)
     except ValueError:
         print("Value error")
         this_lobby.emit_settings()
@@ -447,7 +455,9 @@ def process_client_instruction(json):
 def new_chat_message_handler(json):
     room = session['room']
     username = session['username']
-    msg = json.get('message')
+    msg = json.get('message', '')
+    if len(msg) == 0:
+        return
     this_lobby = lobby_handler.get_lobby(room)
     if not this_lobby:
         return
@@ -470,7 +480,7 @@ def profile():
     username = session['username']
     user = get_user_by_username(username)
     if not user:
-        return render_template('no_guests_allowed.html')
+        return render_template('no_guests_allowed.html', image=get_user_image(user))
     wins = user.wins
     amount_of_correct_guesses = user.words_guessed_correctly
     seconds_took_to_guess = user.seconds_took_to_guess
@@ -501,13 +511,27 @@ def profile():
                            correct_guess_rate=correct_guess_rate, place_by_correct_guess_rate=place_by_correct_guess_rate,
                            seconds_took_to_guess=seconds_took_to_guess, seconds_for_correct_guess=avg_time_to_guess_correctly,
                            place_by_average_seconds_per_correct_guess=place_by_average_seconds_per_correct_guess,
-                           username=username, image=user.image)
+                           username=username, image=get_user_image(user))
+
+
+@app.route('/game_rules', methods=['POST', 'GET'])
+def game_rules():
+    username = session['username']
+    user = get_user_by_username(username)
+    return render_template('game_rules.html', guest=user is None, image=get_user_image(user))
+
+
+@app.route('/website_rules', methods=['POST', 'GET'])
+def website_rules():
+    username = session['username']
+    user = get_user_by_username(username)
+    return render_template('website_rules.html', guest=user is None, image=get_user_image(user))
 
 
 @app.route('/logout', methods=['GET', 'POST'])
 def logout():
     session.pop('username', None)
-    return redirect(url_for('main_page'))
+    return redirect(url_for('login'))
 
 
 if __name__ == '__main__':

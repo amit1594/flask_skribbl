@@ -5,51 +5,64 @@
     <title>Login to use this feature</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
 </head>
-<body>
+<body style="background-color: #3298dc; height: 100vh;">
 <div class="hero-head">
-        <header class="navbar is-link">
-            <div class="container">
-                <div class="navbar-brand">
-                    <a >
-                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
-                    </a>
-                    <div class="navbar-item">
-                        <div class="greet_div">
-                          <div class="info">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
                             <p class="greet">Hello {{ session.username }}</p>
-                          </div>
-                          <figure class="image is-48x48">
+                        </div>
+                        <figure class="image is-48x48">
                             <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
                                  src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
-                          </figure>
-                        </div>
+                        </figure>
                     </div>
-                    <span id="burger" class="navbar-burger">
+                </div>
+                <span id="burger" class="navbar-burger">
                       <span></span>
                       <span></span>
                       <span></span>
                     </span>
-                </div>
-                <div class="navbar-menu" id="nav-links">
-                    <div class="navbar-end">
-                        <a class="navbar-item" href="{{url_for('main_page')}}">
-                            Main
-                        </a>
-                        <a class="navbar-item" href="{{url_for('profile')}}">
-                            Profile
-                        </a>
-                        <a class="navbar-item" href="{{url_for('update_user_info')}}">
-                            Update Account Info
-                        </a>
-                        <a class="navbar-item" href="{{url_for('login')}}">
-                            Login
-                        </a>
-                    </div>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('profile')}}">
+                        Profile
+                    </a>
+                    <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                        Update Account Info
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('login')}}">
+                        Login
+                    </a>
                 </div>
             </div>
-        </header>
+        </div>
+    </header>
+</div>
+<!-- title -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <div class="has-text-centered">
+            <h1 class="title is-1">Login to use this feature</h1>
+        </div>
     </div>
-<h1>Login to use this feature</h1>
+</section>
 <script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

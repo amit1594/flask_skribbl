@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Website Rules</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+<body style="background-color: #3298dc; height: 100vh;">
+<!-- navbar -->
+<div class="hero-head">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
+                            <p class="greet">Hello {{ session.username }}</p>
+                        </div>
+                        <figure class="image is-48x48">
+                            <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
+                                 src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                        </figure>
+                    </div>
+                </div>
+                <span id="burger" class="navbar-burger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('profile')}}">
+                        Profile
+                    </a>
+                    <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                        Update Account Info
+                    </a>
+                    <a class="navbar-item is-active" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    {% if guest %}
+                    <a class="navbar-item" href="{{url_for('login')}}">
+                        Login
+                    </a>
+                    {% else %}
+                    <a class="navbar-item" href="{{url_for('logout')}}">
+                        Logout
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+</div>
+<!-- title -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <div class="has-text-centered">
+            <h1 class="title is-1" style="color: black">The Rules Of The Website</h1>
+        </div>
+        <br>
+        <span class="icon-text">
+          <span class="title">Cookies</span>
+            <span class="icon">
+            <i class="fas fa-cookie"></i>
+          </span>
+        </span>
+        <div class="content">
+            <p class="subtitle">
+                This website is using cookies as a media to store your username. <br>
+                If you wish to not use cookies, you can not continue playing/browsing.
+            </p>
+        </div>
+        <br>
+        <span class="icon-text">
+          <span class="title">Appropriate Behaviour</span>
+            <span class="icon">
+            <i class="fas fa-exclamation-triangle"></i>
+          </span>
+        </span>
+        <div class="content">
+            <p class="subtitle">
+                You may not, under no circumstances, send hateful or spiteful comments to other players. <br>
+                You may not use malicious usernames. <br>
+                You may not draw any inappropriate or rude drawings. <br>
+                Respect others, be kind. Remember that you should treat others the way you do yourself. <br>
+                As an admin, do not kick players at your will. Only do so if the player is ruining the game experience
+                for others.
+            </p>
+        </div>
+        <br>
+        <span class="icon-text">
+          <span class="title">Play Fair</span>
+            <span class="icon">
+            <i class="fas fa-medal"></i>
+          </span>
+        </span>
+        <div class="content">
+            <p class="subtitle">
+                Do not use misuse features such as playing with friends to negatively impact other players. <br>
+                You must draw the chosen word during you turn as an artist, and must try guessing the word while being a
+                guesser. <br>
+                Try your hardest! Don't waste people's time.
+            </p>
+        </div>
+        <br>
+        <span class="icon-text">
+          <span class="title">Have Fun</span>
+            <span class="icon">
+            <i class="fas fa-smile"></i>
+          </span>
+        </span>
+        <div class="content">
+            <p class="subtitle">
+                This website's purpose is to entertain and create joyful experiences. <br>
+                Do not send any personal information!
+            </p>
+        </div>
+    </div>
+</section>
+</body>
+</html>

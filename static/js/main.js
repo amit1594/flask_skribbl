@@ -1,4 +1,4 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port + "/main_page");
+var socket = io.connect('http://' + document.domain + ':' + location.port + "/main_page", {transports: ["websocket"] });
 make_modals_work();
 socket.on( 'connect', function() {
     console.log("connected to socket");
@@ -6,6 +6,13 @@ socket.on( 'connect', function() {
 
 socket.on( 'update_lobbies_list', function(json) {
     var table = document.getElementById('rooms_table');
+    if (Object.keys(json).length == 0) {
+        document.getElementById('rooms_table').style.display = "none";
+        document.getElementById('no_lobbies').style.display = "block";
+        return;
+    }
+    document.getElementById('rooms_table').style.display = "table";
+    document.getElementById('no_lobbies').style.display = "none";
     var tb = document.querySelectorAll('tbody');
     // delete 'old' list
     /*for (var i = 0; i < tb.length; i++) {
@@ -51,6 +58,10 @@ socket.on( 'update_lobbies_list', function(json) {
         var player_countTD = document.createElement("td");
         var startedTD = document.createElement("td");
         var need_passTD = document.createElement("td");
+        player_countTD.style="text-align: center;";
+        startedTD.style="text-align: center;";
+        need_passTD.style="text-align: center;";
+        lobby_idTD.style="text-align: center;";
         player_countTD.appendChild(document.createTextNode(player_count));
         startedTD.appendChild(document.createTextNode(started));
         if (need_pass) {
@@ -66,103 +77,8 @@ socket.on( 'update_lobbies_list', function(json) {
         table.appendChild(newTb);
     }
     make_modals_work();
-    //document.getElementById('testTitle').innerText = json.msg;
 })
 
-/*function make_modals_work() {
-  // Functions to open and close a modal
-  function openModal($el) {
-    $el.classList.add('is-active');
-  }
-
-  function closeModal($el) {
-    $el.classList.remove('is-active');
-  }
-
-  function closeAllModals() {
-    (document.querySelectorAll('.modal') || []).forEach(($modal) => {
-      closeModal($modal);
-    });
-  }
-
-  // Add a click event on buttons to open a specific modal
-  (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
-    const modal = $trigger.dataset.target;
-    const $target = document.getElementById(modal);
-    console.log($target);
-
-    $trigger.addEventListener('click', () => {
-      openModal($target);
-    });
-  });
-
-  // Add a click event on various child elements to close the parent modal
-  (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
-    const $target = $close.closest('.modal');
-
-    $close.addEventListener('click', () => {
-      closeModal($target);
-    });
-  });
-
-  // Add a keyboard event to close all modals
-  document.addEventListener('keydown', (event) => {
-    const e = event || window.event;
-
-    if (e.keyCode === 27) { // Escape key
-      closeAllModals();
-    }
-  });
-}*/
-
-// modal js:
-/*document.addEventListener('DOMContentLoaded', () => {
-  // Functions to open and close a modal
-  function openModal($el) {
-    $el.classList.add('is-active');
-  }
-
-  function closeModal($el) {
-    $el.classList.remove('is-active');
-  }
-
-  function closeAllModals() {
-    (document.querySelectorAll('.modal') || []).forEach(($modal) => {
-      closeModal($modal);
-    });
-  }
-
-  // Add a click event on buttons to open a specific modal
-  (document.querySelectorAll('.js-modal-trigger') || []).forEach(($trigger) => {
-    const modal = $trigger.dataset.target;
-    const $target = document.getElementById(modal);
-    console.log($target);
-
-    $trigger.addEventListener('click', () => {
-      openModal($target);
-    });
-  });
-
-  // Add a click event on various child elements to close the parent modal
-  (document.querySelectorAll('.modal-background, .modal-close, .modal-card-head .delete, .modal-card-foot .button') || []).forEach(($close) => {
-    const $target = $close.closest('.modal');
-
-    $close.addEventListener('click', () => {
-      closeModal($target);
-    });
-  });
-
-  // Add a keyboard event to close all modals
-  document.addEventListener('keydown', (event) => {
-    const e = event || window.event;
-
-    if (e.keyCode === 27) { // Escape key
-      closeAllModals();
-    }
-  });
-});*/
-
-// my js
 function updateRoomID(id){
     document.getElementById("room_id_1").value = id;
 }

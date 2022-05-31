@@ -1,4 +1,4 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port + "/main_page");
+var socket = io.connect('http://' + document.domain + ':' + location.port + "/main_page", {transports: ["websocket"] });
 make_modals_work();
 socket.on( 'connect', function() {
     console.log("connected to socket");

@@ -1,4 +1,4 @@
-var socket = io.connect('http://' + document.domain + ':' + location.port + "/lobby");
+var socket = io.connect('http://' + document.domain + ':' + location.port + "/lobby", {transports: ["websocket"] });
 let pixels_x = [], pixels_y = [];
 let curr_stroke = {};
 
@@ -275,17 +275,6 @@ function getRGBFromColor(c) {
     return `rgb(${draw_color.r}, ${draw_color.g}, ${draw_color.b})`;
 }
 
-function sendMessage() {
-    // sending the client's message to the server
-    var msg = document.getElementById("guess_input").value;
-    if (msg.length > 0){
-        socket.emit( 'new_chat_message', {
-            message : msg
-         } )
-         document.getElementById("guess_input").innerText = "";
-    }
-}
-
 function start(msg) {
     // start a stroke
     if (action != "pen")
@@ -473,7 +462,7 @@ window.addEventListener("resize", () => {
             if (handleCanvasResize()) {
                 clearTimeout(doit);
                 doit = setTimeout(function() {
-                    socket.emit('requestEntireDrawing');
+                    socket.emit('request_entire_drawing');
                 }, 75);
             }
         }, false);
@@ -601,7 +590,7 @@ socket.on( 'new_instruction', function(inst) {
         return;
     } else if (inst.inst_type == "fill") {
         red_border(document.getElementById("fill_button"));
-        context.fillFlood(guesserWidthFactor * inst.x, guesserHeightFactor * inst.y, draw_color)
+        context.fillFlood(guesserWidthFactor * inst.x, guesserHeightFactor * inst.y, draw_color);
         return;
     } else if (inst.inst_type == "change_action") {
         action = inst.action;

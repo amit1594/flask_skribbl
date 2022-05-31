@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Game Rules</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
+    <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
+</head>
+<body style="background-color: #3298dc; height: 100vh;">
+<!-- navbar -->
+<div class="hero-head">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
+                            <p class="greet">Hello {{ session.username }}</p>
+                        </div>
+                        <figure class="image is-48x48">
+                            <img id="user_icon" class="js-modal-trigger" data-target="icon_choosing_div"
+                                 src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                        </figure>
+                    </div>
+                </div>
+                <span id="burger" class="navbar-burger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('profile')}}">
+                        Profile
+                    </a>
+                    <a class="navbar-item" href="{{url_for('update_user_info')}}">
+                        Update Account Info
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item is-active" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    {% if guest %}
+                    <a class="navbar-item" href="{{url_for('login')}}">
+                        Login
+                    </a>
+                    {% else %}
+                    <a class="navbar-item" href="{{url_for('logout')}}">
+                        Logout
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </header>
+</div>
+<!-- title -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <div class="has-text-centered">
+            <h1 class="title is-1" style="color: black">The Rules Of The Game</h1>
+        </div>
+    </div>
+</section>
+<!-- general -->
+<section class="hero is-info">
+    <div class="hero-body">
+        <p class="title">
+            General:
+        </p>
+        <div class="content">
+            <p class="subtitle">
+                Amount of players: 2-10
+            </p>
+        </div>
+    </div>
+</section>
+<!-- how to play -->
+<section class="hero is-primary">
+    <div class="hero-body">
+        <p class="title">
+            How to play?
+        </p>
+        <div class="content">
+            <p class="subtitle">
+                Each turn, a player is assigned to be the <strong>artist</strong>, and the others are
+                <strong>guessers</strong>.<br>
+                The <strong>artist</strong> is prompted with 3 options, of which he picks one and has to draw it in the
+                time limit.<br>
+                To do so, the artist may draw strokes, fill shapes, change colors and the width of the pen. <br>
+                He also has two buttons, one to clear the board and one to undo his last action. <br>
+            </p>
+            <p class="subtitle">
+                The <strong>guesser</strong> need to guess what is he drawing, by typing in the <strong>chat</strong>
+                before the turn ends.<br>
+                They can see at the top of the screen the amount of letters the secret word has, and throughout the
+                turn, as time runs, some letters will reveal themselves. <br>
+                If the <strong>difficulty</strong> is set to Difficult, the letters won't reveal their place in the
+                word.<br>
+                If a player correctly guesses the word, he receives points and can no longer send messages to the
+                players who haven't yet correctly guess. <br>
+                He may still send messages to people who did find the word and to the artist. <br>
+                These points are seen in the <strong>scoreboard</strong> on the left side of the screen. <br>
+                A guesser can buy a <strong>hint</strong>, costing some points, in order to see another letter.
+                This option is limited to once per turn. <br>
+                There's two types of hints: <br>
+            </p>
+            <ul>
+                <li>Private: only the player who bought it can see the extra letter, however it costs more.</li>
+                <li>Public: everyone sees the extra letter. It's cheaper, but also denies everyone of buying another
+                    hint.
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- how to win -->
+<section class="hero is-success">
+    <div class="hero-body">
+        <p class="title">
+            How do you win?
+        </p>
+        <div class="content">
+            <p class="subtitle">
+                It depends on the <strong>game mode</strong>:
+            </p>
+            <ul>
+                <li>Classic: the game ends at the last round (the amount of rounds is set by the lobby's admin) and the
+                    person with the most points wins.
+                </li>
+                <li>Points Rush: the first player to reach the points limit (is also set by the lobby's admin) wins.
+                </li>
+            </ul>
+        </div>
+    </div>
+</section>
+<!-- if inappropriate -->
+<section class="hero is-danger">
+    <div class="hero-body">
+        <p class="title">
+            What to do if a player plays inappropriately?
+        </p>
+        <div class="content">
+            <p class="subtitle">
+                The admin (creator of the room) may kick any player he wishes to. <br>
+            </p>
+        </div>
+    </div>
+</section>
+</body>
+</html>

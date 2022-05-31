@@ -14,35 +14,41 @@
 
 <body>
 <div class="hero-head">
-        <header class="navbar is-link">
-            <div class="container">
-                <div class="navbar-brand">
-                    <a>
-                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
-                    </a>
-                    <div class="navbar-item">
-                        <div class="greet_div">
-                          <div class="info">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
                             <p class="greet">Hello {{ session.username }}</p>
-                          </div>
                         </div>
                     </div>
-                    <span id="burger" class="navbar-burger">
+                </div>
+                <span id="burger" class="navbar-burger">
                       <span></span>
                       <span></span>
                       <span></span>
                     </span>
-                </div>
-                <div class="navbar-menu" id="nav-links">
-                    <div class="navbar-end">
-                        <a class="navbar-item" href="{{url_for('main_page')}}">
-                            Main
-                        </a>
-                    </div>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
                 </div>
             </div>
-        </header>
-    </div>
+        </div>
+    </header>
+</div>
 <section class="hero is-info is-fullheight">
     <div class="hero-body">
         <div class="container">
