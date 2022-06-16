@@ -2,18 +2,75 @@
 <html>
 
 <head>
+    <link rel="icon" href="/static/Images/favicon.png">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script type="text/javascript" src="{{url_for('static', filename='js/registration.js')}}"></script>
+    <style>
+        .already_registered{
+            color: #c4b998;
+            font-size: 20px;
+        }
+
+        .link {
+            font-family: serif;
+            color: gray;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
+<!-- navbar -->
+<div class="hero-head">
+    <header class="navbar is-link">
+        <div class="container">
+            <div class="navbar-brand">
+                <a>
+                    <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
+                </a>
+                <div class="navbar-item">
+                    <div class="greet_div">
+                        <div class="info">
+                            <p class="greet">Hello {{ session.username }}</p>
+                        </div>
+                        <figure class="image is-48x48">
+                            <img id="user_icon" src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                        </figure>
+                    </div>
+                </div>
+                <span id="burger" class="navbar-burger">
+                      <span></span>
+                      <span></span>
+                      <span></span>
+                    </span>
+            </div>
+            <div class="navbar-menu" id="nav-links">
+                <div class="navbar-end">
+                    <a class="navbar-item" href="{{url_for('main_page')}}">
+                        Main
+                    </a>
+                    <a class="navbar-item" href="{{url_for('website_rules')}}">
+                        Website Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('game_rules')}}">
+                        Game Rules
+                    </a>
+                    <a class="navbar-item" href="{{url_for('login')}}">
+                        Login
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+</div>
+
 <section class="hero is-info is-fullheight">
     <div class="hero-body">
         <div class="container">
@@ -29,19 +86,20 @@
                                 <div class="field">
                                     <label class="label">Username</label>
                                     <div class="control has-icons-left has-icons-right">
-                                        <input class="input" type="text" id="uName" name="username" maxlength="15" value="{{username}}"
+                                        <input class="input" type="text" id="uName" name="username" maxlength="15"
+                                               value="{{username}}"
                                                placeholder="Username" oninput="validate_username()" required>
                                         <span class="icon is-small is-left">
                                           <i class="fas fa-user"></i>
                                         </span>
                                         <p id="username_help" class="help has-text-left">
-                                        {% if alert == "char" %}
+                                            {% if alert == "char" %}
                                             Username can not include the character '{{not_allowed}}'
-                                        {% elif alert == "word" %}
+                                            {% elif alert == "word" %}
                                             Username can not include the word '{{not_allowed}}'
-                                        {% elif alert == "taken" %}
+                                            {% elif alert == "taken" %}
                                             Username taken
-                                        {% endif %}
+                                            {% endif %}
                                         </p>
                                     </div>
                                 </div>
@@ -92,5 +150,4 @@
     </div>
 </section>
 </body>
-
 </html>

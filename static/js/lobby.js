@@ -1,10 +1,16 @@
 var socket = io.connect('http://' + document.domain + ':' + location.port + "/lobby", {transports: ["websocket"] });
 let pixels_x = [], pixels_y = [];
 let curr_stroke = {};
+let admin = false;
 
 socket.on( 'connect', function() {
     console.log("Room: " + room);
     socket.emit( 'player_join');
+})
+
+socket.on( 'disconnect', function() {
+    alert('Lost connection!');
+    window.location.href = 'http://' + document.domain + ':' + location.port + "/main";
 })
 
 function emitWordChoice(word) {
@@ -185,22 +191,57 @@ function create_score_div_html(place, name, points, img) {
 	my_str += "<div class=\"info\">";
 	my_str += "<p class=\"name\">" + name + "</p>";
 	my_str += "<p class=\"score\">Points: " + points + "</p></div>";
-	my_str += "<div class=\"player_icon\">";
-	my_str += "<img class=\"player_icon\" src=\"" + img + "\" alt=\"icon\">";
+	my_str += "<div class=\"player_icon\"><img class=\"player_icon\" src=\"" + img + "\" alt=\"icon\"></div>";
     my_str += "</div>";
     return my_str;
 }
 
+function kick_player(name) {
+    if (confirm('Kick ' + name + ' ?')) {
+        socket.emit( 'kick_player', { kicked_name : name } )
+    }
+}
+
+function update_players_in_a_table(tableName, containerName, addKickListener, msg) {
+    var playerCount = 0;
+    document.getElementById(tableName).innerHTML = "";
+    var scoreboardTblBody = document.getElementById(tableName);
+    var width = document.getElementById(containerName).getBoundingClientRect().width;
+    var html = "";
+    var allowed_to_kick = Object.keys(msg).length > 2;
+    var add_row;
+    for (var key of Object.keys(msg)) {
+        playerCount += 1;
+        html = "<tr>";
+        add_row = true;
+        if (addKickListener) {
+            if (allowed_to_kick && key !== uName) {
+                html += "<td onClick=\"kick_player(\'" + key + "\')\">" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1]);
+            } else {
+                add_row = false;
+            }
+        } else {
+            html += "<td>" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1]);
+        }
+        html += "</td></tr>";
+        if (add_row) {
+            document.getElementById(tableName).innerHTML += html;
+        }
+    }
+}
+
 socket.on( 'update_scoreboard', function(msg) {
     // updates  the scoreboard
-    var playerCount = 0;
+    /*var playerCount = 0;
     document.getElementById("scoreboardTblBody").innerHTML = "";
     var scoreboardTblBody = document.getElementById("scoreboardTblBody");
     var width = document.getElementById("containerPlayerList").getBoundingClientRect().width;
     for (var key of Object.keys(msg)) {
         playerCount += 1;
         document.getElementById("scoreboardTblBody").innerHTML += "<tr><td>" + create_score_div_html(playerCount, key, msg[key][0], msg[key][1])  + "</td></tr>";
-    }
+    }*/
+    update_players_in_a_table("scoreboardTblBody", "containerPlayerList", false, msg);
+    update_players_in_a_table("kickTblBody", "containerKickList", true, msg);
 })
 
 socket.on( 'allowed_to_start', function(msg) {
@@ -215,6 +256,8 @@ socket.on( 'admin_update', function(msg) {
     // if received, it means this player became admin, enabling to change the settings. Note: only admins get this event
     if (uName === msg.admin) {
         console.log("You are the admin!");
+        admin = true;
+        document.getElementById('kick_button').style.display = 'block';
         document.getElementById('Rounds').disabled = false;
         document.getElementById('DrawTime').disabled = false;
         document.getElementById('Languages').disabled = false;
@@ -535,6 +578,7 @@ function getFixedCordY(eventY) {
 
 function sendStart(e) {
     // sends instructions
+    console.log("Starting");
     if (action == "fill") {
         json = {inst_type: 'fill', x: scaleXForServer(getFixedCordX(e.clientX)), y: scaleYForServer(getFixedCordY(e.clientY))}
         socket.emit( 'client_instruction', json);
@@ -548,6 +592,7 @@ function sendStart(e) {
 
 function sendDraw(e) {
     // sends instructions
+    console.log("Drawing");
     if (is_drawing) {
         draw({clickX : getFixedCordX(e.clientX), clickY : getFixedCordY(e.clientY)} );
         if (pixels_x.length > 50) {
@@ -564,9 +609,10 @@ function sendDraw(e) {
 
 function sendStop(e) {
     // sends instructions
+    console.log("Stopping");
     if (is_drawing) {
         stop({});
-        if (pixels_x.length > 1) {
+        if (pixels_x.length >= 1) {
             my_json = {inst_type: 'stroke', pixels_x : pixels_x, pixels_y : pixels_y}
             socket.emit( 'client_instruction', my_json)
             pixels_x = []

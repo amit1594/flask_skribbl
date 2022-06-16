@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
     <title>Main Page</title>
+    <link rel="icon" href="/static/Images/favicon.png">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
@@ -167,7 +168,7 @@
 
 <br><br><br><br>
 
-<!-- title -->
+<!-- main -->
 <section class="hero is-info">
     <div class="hero-body">
         <h1 class="title is-1">Join a lobby:</h1>
@@ -304,6 +305,5 @@
 {% endif %}
 <script src="{{url_for('static', filename='js/helpers.js')}}"></script>
 <script src="{{url_for('static', filename='js/main.js')}}"></script>
-<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

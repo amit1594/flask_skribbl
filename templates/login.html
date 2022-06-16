@@ -2,17 +2,31 @@
 <html>
 
 <head>
+    <link rel="icon" href="/static/Images/favicon.png">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Login</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
+    <style>
+        .already_registered{
+            color: #c4b998;
+            font-size: 20px;
+        }
+
+        .link {
+            font-family: serif;
+            color: gray;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body>
+<!-- navbar -->
 <div class="hero-head">
     <header class="navbar is-link">
         <div class="container">
@@ -25,6 +39,9 @@
                         <div class="info">
                             <p class="greet">Hello {{ session.username }}</p>
                         </div>
+                        <figure class="image is-48x48">
+                            <img id="user_icon" src="static/Images/{{image}}.png" alt="Image" style="max-height: none;">
+                        </figure>
                     </div>
                 </div>
                 <span id="burger" class="navbar-burger">
@@ -49,6 +66,7 @@
         </div>
     </header>
 </div>
+
 <section class="hero is-info is-fullheight">
     <div class="hero-body">
         <div class="container">
@@ -113,7 +131,7 @@
         </div>
     </div>
 </section>
-<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
+<script src="{{url_for('static', filename='js/helpers.js')}}"></script>
 <script src="{{url_for('static', filename='js/login.js')}}"></script>
 </body>
 </html>

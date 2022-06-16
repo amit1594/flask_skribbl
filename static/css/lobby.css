@@ -177,7 +177,11 @@ canvas {
 }
 
 .wordSpace {
-    width: 40%;
+    width: 35%;
+}
+
+.kick_button_tab {
+    width: 5%;
 }
 
 .player {
@@ -224,7 +228,15 @@ canvas {
             font-size: 14px;
         }
 
-    .player .player_icon {
-        height: 48px;
-        width: 48px;
-    }
+.player_icon {
+    height: 48px;
+    width: 48px;
+}
+
+.kick_button {
+    height: 48px;
+    width: 48px;
+    background: url(/static/Images/kicking.png) no-repeat;
+    cursor:pointer;
+    border: none;
+}

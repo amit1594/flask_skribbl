@@ -123,31 +123,32 @@ class Lobby:
 
     def remove_player(self, username):
         """ Removes the player from the player list.
-            Returns True if the lobby should be removed from lobbyhandler (no more players in room)"""
+            Returns the sid of the removed player, if he doesn't exists returns None """
         print("player removed by Lobby")
         if len(self.player_list) <= 1:
             self.player_list = []
             self.admin = ""
             self.started = False
-            return True
+            return None
         i = 0
-        found = False
+        removed_sid = None
         for p in self.player_list:
             if username == p.username:
                 self.player_list.pop(i)
                 if username == self.admin:  # update admin if he disconnected
                     self.admin = self.player_list[0].username
-                found = True
+                removed_sid = p.sid
                 break
             i += 1
         self.sock.emit('update_player_list', player_list_to_dict(self.player_list, False), room=self.lobby_id,
                        namespace='/lobby')
-        if found:
+        if removed_sid:
             if self.current_turn:
                 self.current_turn.remove_player(username)
+            return removed_sid
         else:
             print("Player {} was not in lobby {}".format(username, self.lobby_id))
-        return False
+        return None
 
     def emit_settings(self, room):
         """ Sends the current setting to everyonne in the given room """
@@ -275,3 +276,9 @@ class Lobby:
         """ calls for the current turn's send_entire_drawing """
         if self.current_turn:
             self.current_turn.send_entire_drawing(sid)
+
+    def kick_player(self, username, kicked_name):
+        """ calls for the current turn's send_entire_drawing """
+        if username == self.admin and len(self.player_list) > 2:
+            return self.remove_player(kicked_name)
+        return None

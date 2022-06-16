@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, session, url_for
 import random
-from flask_socketio import SocketIO, join_room, leave_room
+from flask_socketio import SocketIO, join_room, leave_room, disconnect
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import text
 import logging
@@ -177,7 +177,7 @@ def login():
 @app.route('/register', methods=['POST', 'GET'])
 def register():
     if request.method != 'POST':  # form not submitted
-        return render_template('register.html')
+        return render_template('register.html', image="anonymous")
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -274,7 +274,11 @@ def main_page():
                 return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies, prev_id=room, display=display,
                                        prev_pass=room_password, alert="create", guest=user is None, type="exists", image=get_user_image(user))
         elif op == "join":  # joining a room
-            actual_pass = lobby_handler.get_lobby(room).password
+            my_lobby = lobby_handler.get_lobby(room)
+            if not my_lobby:
+                return render_template('main.html', my_icons=get_icons_for_user(username), rooms=all_lobbies,
+                                       image=get_user_image(user), guest=user is None, display=display)
+            actual_pass = my_lobby.password
             if actual_pass is None or actual_pass == room_password:
                 session['room'] = room
                 session['room_password'] = room_password
@@ -328,6 +332,20 @@ def request_entire_drawing():
     if not this_lobby:
         return
     this_lobby.send_entire_drawing(request.sid)
+
+
+@socketio.on('kick_player', namespace='/lobby')
+def request_entire_drawing(json):
+    room = session['room']
+    username = session['username']
+    this_lobby = lobby_handler.get_lobby(room)
+    if not this_lobby:
+        return
+    removed_sid = this_lobby.kick_player(username, json.get('kicked_name', ''))
+    print('attempt to kick: ', removed_sid, json.get('kicked_name', 'as'))
+    if removed_sid:
+        disconnect(sid=removed_sid, namespace='/lobby')
+        get_all_lobbies()
 
 
 @socketio.on('artist_chose_word', namespace='/lobby')
@@ -535,4 +553,4 @@ def logout():
 
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, host="0.0.0.0", port=5000)
+    socketio.run(app, debug=True, host="0.0.0.0", port=80)

@@ -1,62 +1,27 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="icon" href="/static/Images/favicon.png">
     <meta charset="UTF-8">
     <title>Lobby</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
     <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/lobby.css')}}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script type="text/javascript" src="{{url_for('static', filename='js/floodfill.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/helpers.js')}}"></script>
 </head>
 <body>
-<!-- jQuery (necessary for Bootstrap's JavaScript plugins)
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>-->
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
 <script>
         const uName = "{{ session.username }}"
         const room = "{{ room }}"
         const room_pass = "{{ room_pass }}"
-  </script>
+
+</script>
 <!-- Content -->
 <section class="hero is-success is-fullheight is-fullwidth">
-    <!-- NavBar
-    <div class="hero-head">
-        <header class="navbar">
-            <div class="container">
-                <div class="navbar-brand">
-                    <a >
-                        <img src="{{url_for('static', filename='Images/logo.png')}}" style="height: 75px" alt="Logo">
-                    </a>
-                    <span class="navbar-burger" data-target="navbarMenuHeroC">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-                </div>
-                <div id="navbarMenuHeroC" class="navbar-menu">
-                    <div class="navbar-end">
-                        <a class="navbar-item is-active">
-                            Home
-                        </a>
-                        <a class="navbar-item">
-                            Examples
-                        </a>
-                        <a class="navbar-item">
-                            Documentation
-                        </a>
-                        <span class="navbar-item">
-                <a class="button is-success is-inverted">
-                  <span class="icon">
-                    <i class="fab fa-github"></i>
-                  </span>
-                  <span>Download</span>
-                </a>
-              </span>
-                    </div>
-                </div>
-            </div>
-        </header>
-    </div>-->
     <!-- Settings Screen -->
     <div class="hero-body" id="LobbyScreen">
         <div class="container has-text-centered">
@@ -69,7 +34,8 @@
                         <label class="label" for="Gamemode">Gamemode</label>
                         <div class="control has-icons-left">
                             <div class="select" style="width: 100%">
-                                <select id="Gamemode" name="Gamemode" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                <select id="Gamemode" name="Gamemode" style="width: 100%"
+                                        onchange="requestUpdateSettings()" disabled>
                                     <option value="Classic" selected>Classic</option>
                                     <option value="Points_Rush">Points Rush</option>
                                 </select>
@@ -83,7 +49,8 @@
                             <label class="label" for="pointsLimit">Points Limit</label>
                             <div class="control has-icons-left">
                                 <div class="select" style="width: 100%">
-                                    <select id="pointsLimit" name="pointsLimit" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <select id="pointsLimit" name="pointsLimit" style="width: 100%"
+                                            onchange="requestUpdateSettings()" disabled>
                                         <option value="5000">5000</option>
                                         <option value="10000">10000</option>
                                         <option value="15000">15000</option>
@@ -106,7 +73,8 @@
                             <label class="label" for="Rounds">Rounds</label>
                             <div class="control has-icons-left">
                                 <div class="select" style="width: 100%">
-                                    <select id="Rounds" name="Rounds" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                    <select id="Rounds" name="Rounds" style="width: 100%"
+                                            onchange="requestUpdateSettings()" disabled>
                                         <option value="1">1</option>
                                         <option value="2">2</option>
                                         <option value="3">3</option>
@@ -130,7 +98,8 @@
                         <label class="label" for="Difficulty">Difficulty</label>
                         <div class="control has-icons-left">
                             <div class="select" style="width: 100%">
-                                <select id="Difficulty" name="Difficulty" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                <select id="Difficulty" name="Difficulty" style="width: 100%"
+                                        onchange="requestUpdateSettings()" disabled>
                                     <option value="Normal" selected>Normal</option>
                                     <option value="Difficult">Difficult</option>
                                 </select>
@@ -146,7 +115,8 @@
                         <label class="label" for="DrawTime">Draw time (seconds)</label>
                         <div class="control has-icons-left">
                             <div class="select" style="width: 100%">
-                                <select id="DrawTime" name="DrawTime" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                <select id="DrawTime" name="DrawTime" style="width: 100%"
+                                        onchange="requestUpdateSettings()" disabled>
                                     <option value="30">30</option>
                                     <option value="40">40</option>
                                     <option value="50">50</option>
@@ -170,7 +140,8 @@
                         <label class="label" for="Languages">Language</label>
                         <div class="control has-icons-left">
                             <div class="select" style="width: 100%">
-                                <select id="Languages" name="Languages" style="width: 100%" onchange="requestUpdateSettings()" disabled>
+                                <select id="Languages" name="Languages" style="width: 100%"
+                                        onchange="requestUpdateSettings()" disabled>
                                     <option value="English" selected>English</option>
                                     <option value="Hebrew">Hebrew</option>
                                     <option value="Italian">Italian</option>
@@ -197,15 +168,17 @@
                             <p class="help has-text-left">
                                 Will not add a word if it:
                                 <br>
-                                *  has a non-letter character, including spaces.
+                                * has a non-letter character, including spaces.
                                 <br>
-                                *  is considered inappropriate.
+                                * is considered inappropriate.
                             </p>
                         </div>
                         <br>
                         <!-- Submit Button -->
                         <div class="control">
-                            <button type="button" id="startButton" class="button is-primary" onclick="startGame()" disabled>Submit</button>
+                            <button type="button" id="startButton" class="button is-primary" onclick="startGame()"
+                                    disabled>Submit
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -234,6 +207,32 @@
             </div>
             <div class="wordSpace" id="wordSpace">
             </div>
+            <div class="kick_button" id="kick_button" style="display: none;">
+                <div class="player_icon">
+                    <img class="player_icon js-modal-trigger" data-target="kick_modal" src="/static/Images/kicking.png"
+                         alt="Press open the kick menu.">
+                </div>
+                <div id="kick_modal" class="modal">
+                    <div class="modal-background"></div>
+                    <div class="modal-content">
+                        <div class="has-text-centered">
+                            <h1 class="title is-4" style="color: white">Click on the player's row to kick that player</h1>
+                            <br>
+                            <h1 class="title is-5" style="color: white">Only allowed when more than two players are playing.</h1>
+                        </div>
+                        <div class="box">
+                            <div class="containerKickList" id="containerKickList">
+                                <div class="content">
+                                    <table>
+                                        <tbody id="kickTblBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="modal-close is-large" aria-label="close"></button>
+                </div>
+            </div>
         </div>
         <div class="containerGame">
             <div class="containerPlayerList" id="containerPlayerList">
@@ -252,15 +251,18 @@
                         <p class="title is-2 is-spaced" id="overlay_title">overlay title</p>
                         <br>
                         <div class="columns is-centered">
-                          <div class="column">
-                              <ol class="is-size-4" style="list-style-type:none;" id="overlayList"></ol>
-                          </div>
+                            <div class="column">
+                                <ol class="is-size-4" style="list-style-type:none;" id="overlayList"></ol>
+                            </div>
                         </div>
                         <br>
                         <div id="WordChoicesButtonDiv">
-                            <button class="button is-large" id="choice1" value="" onclick="emitWordChoice(this.value)"></button>
-                            <button class="button is-large" id="choice2" value="" onclick="emitWordChoice(this.value)"></button>
-                            <button class="button is-large" id="choice3" value="" onclick="emitWordChoice(this.value)"></button>
+                            <button class="button is-large" id="choice1" value=""
+                                    onclick="emitWordChoice(this.value)"></button>
+                            <button class="button is-large" id="choice2" value=""
+                                    onclick="emitWordChoice(this.value)"></button>
+                            <button class="button is-large" id="choice3" value=""
+                                    onclick="emitWordChoice(this.value)"></button>
                         </div>
                     </div>
                 </div>
@@ -275,20 +277,25 @@
                     <div class="container">
                         <form id="chatForm">
                             <div class="control">
-                                <input id="inputChat" autocomplete="off" type="text" placeholder="Type your guess here..." maxlength="100">
+                                <input id="inputChat" autocomplete="off" type="text" style="width: 100%;"
+                                       placeholder="Type your guess here..." maxlength="100">
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
         </div>
-        <br />
+        <br/>
         <div id="containerToolbar" class="containerToolbar">
             <div id="buttonsContainer" class="buttonsContainer">
                 <button onclick="undo_last()" type="button" class="button">Undo</button>
                 <button onclick="sendClearCanvas()" type="button" class="button">Clear</button>
-                <button onclick="red_border(this); request_action_change('pen')" id="pen_button" type="button" class="button">Pen</button>
-                <button onclick="red_border(this); request_action_change('fill')" id="fill_button" type="button" class="button">Fill</button>
+                <button onclick="red_border(this); request_action_change('pen')" id="pen_button" type="button"
+                        class="button">Pen
+                </button>
+                <button onclick="red_border(this); request_action_change('fill')" id="fill_button" type="button"
+                        class="button">Fill
+                </button>
             </div>
 
             <div id="colorsContainer" class="colorsContainer">
@@ -309,17 +316,21 @@
             </div>
             <div id="pen_range_container">
                 <p class="pen_range_text">Set pen size:</p>
-                <input oninput="request_width_change(this.value); document.getElementById('pen_range_text').innerText = value;" type="range" min="1" max="10" class="pen-range" value="2" />
+                <input oninput="request_width_change(this.value); document.getElementById('pen_range_text').innerText = value;"
+                       type="range" min="1" max="10" class="pen-range" value="2"/>
                 <p class="pen_range_text" id="pen_range_text">2</p>
             </div>
         </div>
         <div id="hintButtonContainer" class="containerToolbar">
-            <button type="button" value="private" id="privateHint" onclick="requestHint(this.value)">Private hint 350p</button>
-            <button type="button" value="public" id="publicHint" onclick="requestHint(this.value)">Public hint 150p</button>
+            <button type="button" value="private" id="privateHint" onclick="requestHint(this.value)">Private hint 350p
+            </button>
+            <button type="button" value="public" id="publicHint" onclick="requestHint(this.value)">Public hint 150p
+            </button>
         </div>
     </div>
     <!-- my js -->
     <script src="{{url_for('static', filename='js/lobby.js')}}"></script>
+    <script>make_modals_work();</script>
 </section>
 
 </body>

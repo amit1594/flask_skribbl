@@ -2,17 +2,30 @@
 <html>
 
 <head>
+    <link rel="icon" href="/static/Images/favicon.png">
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='css/main.css')}}">
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Register</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.min.css">
-    <link rel="stylesheet" href="{{url_for('static', filename='css/links.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/update_user_info.css')}}">
     <script defer src="https://use.fontawesome.com/releases/v5.3.1/js/all.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/core.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/md5.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.7.3/socket.io.min.js"></script>
+    <style>
+        .already_registered{
+            color: #c4b998;
+            font-size: 20px;
+        }
+
+        .link {
+            font-family: serif;
+            color: gray;
+            text-decoration: underline;
+        }
+    </style>
 </head>
 
 <body style="background-color: #3298dc; height: 100vh;">
@@ -188,6 +201,5 @@
 </section>
 <script type="text/javascript" src="{{url_for('static', filename='js/helpers.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='js/update_user_info.js')}}"></script>
-<script src="{{url_for('static', filename='js/navbar.js')}}"></script>
 </body>
 </html>

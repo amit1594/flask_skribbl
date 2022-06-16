@@ -273,8 +273,8 @@ class Turn:
         return points_received, time_diff
 
     def new_chat_message(self, username, message):
-        """ Processes a  chat message """
-        if not self.active or not self.word:
+        """ Processes a  chat message. Returns:  is_a_guess, points_received, time_diff """
+        if not self.active:
             return False, None, None
         player = self.get_player_object_by_username(username)
         if not player:  # unrecognized username
@@ -284,6 +284,15 @@ class Turn:
                            room=player.sid, namespace='/lobby')
             return True, None, None
         json = {'username': username, 'message': message}
+        if not self.word:  # if while word choosing
+            if username == self.artist.username:
+                json['type'] = "guessed_chat"
+                self.send_to_artist('chat_message', json)  # he should also see the message
+            else:  # not the artist
+                json['type'] = "regular"
+                self.send_to_all('chat_message', json)
+            return False, None, None
+        # this is assuming the word is chosen
         if username in self.guessed.keys() or username == self.artist.username:  # if guessed correctly before
             json['type'] = "guessed_chat"
             for tempP in self.player_list:  # send to everyone who already guessed
@@ -292,6 +301,9 @@ class Turn:
             self.send_to_artist('chat_message', json)  # he should also see the message
             return False, None, None
         elif message.upper() == self.word.upper():  # correct guess
+            result = self.add_points_to_player(player)
+            if not result:
+                return False, None, None
             points, time_diff = self.add_points_to_player(player)
             if points is not None:
                 self.guessed[username] = points
@@ -342,6 +354,7 @@ class Turn:
         if not self.active or username != self.artist.username or 'inst_type' not in inst:
             return
         inst_type = inst.get('inst_type', None)
+        print(inst)
         if inst_type == "clear":
             self.send_to_all('new_instruction', {'inst_type': 'clear'})
             self.instructions = []
@@ -411,6 +424,7 @@ class Turn:
             return
         self.send_current_overlay()
         self.sock.emit('chat_message', {'type': 'join_alert', 'username': player.username}, room=self.room, namespace='/lobby')
+        self.send_current_scoreboard()
         self.send_all_instructions(player.sid)
 
     def generate_words(self):
@@ -435,7 +449,6 @@ class Turn:
             path += "static\\words\\german.txt"
         else:
             path += "static\\words\\english.txt"
-        print(path)
         with open(path, 'rb') as f:
             text_lst = f.read().decode(errors='replace').split()
         for word in self.custom_words:  # adds the custom words
@@ -514,7 +527,6 @@ class Turn:
         timer = 15  # 15 seconds to decide on a word, else will the first one is chosen
         self.waiting_for_word = True
         while len(self.player_list) > 1 and self.word is None and timer > 0:  # other events will set self.word
-            print("word choosing timer: " + str(timer))
             timer -= 1
             time.sleep(1)
         self.waiting_for_word = False
@@ -597,8 +609,9 @@ class Turn:
         points, time_diff = self.add_points_to_player(self.artist)  # adding points to the artist at the end of the turn
         if points is not None:
             self.guessed[self.artist.username] = points
-        self.send_current_overlay()
-        self.sock.emit('chat_message', {'type': 'turn_ended', 'last_word': self.word}, room=self.room, namespace='/lobby')
-        time.sleep(5)  # allow for 5 seconds of the 'end of turn' overlay
+        if len(self.player_list) > 1:  # will show turn_ended only if there are at least 2 players
+            self.send_current_overlay()
+            self.sock.emit('chat_message', {'type': 'turn_ended', 'last_word': self.word}, room=self.room, namespace='/lobby')
+            time.sleep(5)  # allow for 5 seconds of the 'end of turn' overlay
         self.terminate()
         return self.return_end_of_game  # return whether the entire game should end (for Points_Rush)

@@ -231,18 +231,6 @@ asia
 ask
 asleep
 aspect
-assassin
-assault
-assembly
-assertion
-assertive
-assessment
-asset
-assignment
-association
-assume
-assumption
-assurance
 asterix
 asteroid
 astonishing
@@ -641,7 +629,6 @@ carve
 case
 cash
 casino
-cassette
 cast
 castle
 casualty
@@ -780,10 +767,6 @@ clap
 clarify
 clarinet
 clash
-class
-classical
-classify
-classroom
 claw
 clay
 clean
@@ -868,7 +851,6 @@ comparable
 compare
 comparison
 compartment
-compass
 compatible
 compensate
 compensation
@@ -1428,8 +1410,6 @@ elon
 eloquent
 elsa
 embark
-embarrassment
-embassy
 embers
 embryo
 emerald
@@ -1858,8 +1838,6 @@ glad
 gladiator
 glance
 glare
-glass
-glasses
 glide
 glimpse
 glitter
@@ -1910,8 +1888,6 @@ grapes
 graph
 graphic
 graphics
-grass
-grasshopper
 grateful
 grave
 gravedigger
@@ -2110,7 +2086,6 @@ hostility
 hot
 hotel
 hour
-hourglass
 house
 houseplant
 housewife
@@ -2429,7 +2404,6 @@ large
 las
 lasagna
 laser
-lasso
 last
 late
 latest
@@ -2650,8 +2624,6 @@ marsh
 marshmallow
 mascot
 mask
-mass
-massage
 master
 match
 matchbox
@@ -3100,14 +3072,6 @@ particular
 partner
 partnership
 party
-pass
-passage
-passenger
-passion
-passionate
-passive
-passport
-password
 past
 pasta
 pastel
@@ -3197,7 +3161,6 @@ photoshop
 physical
 physics
 piano
-picasso
 pick
 pickaxe
 pickle
@@ -4262,7 +4225,6 @@ summit
 sun
 sunburn
 sunflower
-sunglasses
 sunrise
 sunshade
 sunshine
